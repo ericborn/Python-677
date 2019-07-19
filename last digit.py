@@ -43,13 +43,11 @@ bsx_df = pd.DataFrame([sub.split(',') for sub in lines], columns = cols)
 # set during the dataframe construction
 bsx_df = bsx_df.drop([0], axis = 0)
 
-x = float(10.01)
+# Convert open price to float
+bsx_df.open = bsx_df.open.astype(float)
 
-x[-1]
-
-bsx_df.iloc[0,7]
-
-bsx_df.iloc = bsx_df.iloc[:,7].apply(lambda x : "%.2f"%x)
+# Apply formatting across the open price column to
+bsx_df.iloc[:,7] = bsx_df.iloc[:,7].apply(lambda x : "%.2f"%x)
 
 zero = 0
 one = 0
