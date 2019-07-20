@@ -46,9 +46,10 @@ bsx_df = bsx_df.drop([0], axis = 0)
 # Convert open price to float
 bsx_df.open = bsx_df.open.astype(float)
 
-# Apply formatting across the open price column to
+# Apply formatting with 2 digit precision across the open price column
 bsx_df.iloc[:,7] = bsx_df.iloc[:,7].apply(lambda x : "%.2f"%x)
 
+# Declare empty variables for storing how many of each occured
 zero = 0
 one = 0
 two = 0
@@ -60,6 +61,7 @@ seven = 0
 eight = 0
 nine = 0
 
+# For loop to count the digits occurances
 for i in range(len(bsx_df) -1):
     if bsx_df.iloc[i,7][-1] == '0':
         zero = zero + 1
@@ -82,4 +84,13 @@ for i in range(len(bsx_df) -1):
     if bsx_df.iloc[i,7][-1] == '9':
         nine = nine + 1    
 
-max(zero, one, two, three, four, five, six, seven, eight, nine)
+lst = {'zero': zero, 'one': one, 'two': two, 'three': three, 'four': four,
+      'five': five, 'six': six, 'seven': seven, 'eight': eight, 'nine': nine}
+
+# Q1
+# Most frequent digit
+max(lst.items())
+
+# Q2
+# 
+min(lst.items())
