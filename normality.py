@@ -9,7 +9,7 @@ import os
 import pandas as pd
 
 ticker = 'BSX'
-input_dir = r'C:\Users\TomBrody\Desktop\School\677\wk2'
+input_dir = r'C:\Users\eborn\Desktop\school\677\wk2'
 ticker_file = os.path.join(input_dir, ticker + '.csv')
 
 try:
@@ -37,35 +37,36 @@ bsx_df = pd.DataFrame([sub.split(',') for sub in lines], columns = cols)
 # set during the dataframe construction
 bsx_df = bsx_df.drop([0], axis = 0)
 
-yr_13_p = 0
-yr_14_p = 0
-yr_15_p = 0
-yr_16_p = 0
-yr_17_p = 0
-yr_18_p = 0
-
-yr_13_n = 0
-yr_14_n = 0
-yr_15_n = 0
-yr_16_n = 0
-yr_17_n = 0
-yr_18_n = 0
-
 # explicitly set column types for ease in calculating
 bsx_df.td_year = bsx_df.td_year.astype(int)
 bsx_df.returns = bsx_df.returns.astype(float)
 
-(bsx_df.iloc[[1], -3].item() > 0) == True
+# use dictionary to store year and total positive negative instead of list
+years_p = {2013: 1, 2014: 1, 2015: 1, 2016: 1, 2017:1, 2018:1}
+years_n = {2013: 1, 2014: 1, 2015: 1, 2016: 1, 2017:1, 2018:1}
 
-bsx_df.iloc[[0], 1].item() == 2013
+for j in range(2013, 2019):
+    for i in range(1, len(bsx_df) - 1):
+        if all((bsx_df.iloc[[i], 1] == j) & all(bsx_df.iloc[[i], -3] > 0)):
+            years_p[j] += 1
 
-bsx_df[[1], -3]
+        if all((bsx_df.iloc[[i], 1] == j) & all(bsx_df.iloc[[i], -3] < 0)):
+            years_n[j] += 1
 
+# average returns per year            
+means = dict(round(bsx_df.groupby('td_year')['returns'].mean(), 4))
 
-for i in range(1, len(bsx_df) - 1):
-    if bsx_df.all((bsx_df.iloc[[i], 1].item() == 2013) & (bsx_df.iloc[[i], -3] > 0)):
-        yr_13_p = yr_13_p + 1
+years_above_avg = {2013: 1, 2014: 1, 2015: 1, 2016: 1, 2017:1, 2018:1}
+years_below_avg = {2013: 1, 2014: 1, 2015: 1, 2016: 1, 2017:1, 2018:1}
 
-    if ((bsx_df.iloc[[i], 1].item() == 2013) & (bsx_df.iloc[[i], -3] < 0)):
-        yr_13_n = yr_13_n + 1
-    
+for key in means:
+    for i in range(1, len(bsx_df) - 1):
+        if all((bsx_df.iloc[[i], 1] == key) & all(bsx_df.iloc[[i], -3] > means[key])):
+            years_above_avg[key] += 1
+        
+        if all((bsx_df.iloc[[i], 1] == key) & all(bsx_df.iloc[[i], -3] < means[key])):
+            years_below_avg[key] += 1
+
+for year in years_above_avg.keys():
+    print(year, years_above_avg[year] + years_below_avg[year], means[year],
+          years_above_avg[year], years_below_avg[year])
