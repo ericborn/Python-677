@@ -12,85 +12,66 @@ Created on Thu Jul 18 17:38:54 2019
 @author: Eric Born
 """
 
-import os
+#import os
 import pandas as pd
+import numpy as np
+import statistics as s
+import math as m
 
-ticker = 'BSX-labeled'
-input_dir = r'C:\Users\TomBrody\Desktop\School\677\wk2'
-ticker_file = os.path.join(input_dir, ticker + '.csv')
+input_dir = r'C:\Users\TomBrody\Desktop\School\677\wk2\BSX-labeled.csv'
 
-try:
-    with open(ticker_file) as f:
-        lines = f.read().splitlines()
-        # list_lines = lines.split('\n')
-    print('opened file for ticker: ', ticker)
-    """    your code for assignment 1 goes here
-    """
+bsx_df = pd.read_csv(input_dir)
 
-except Exception as e:
-    print(e)
-    print('failed to read stock data for ticker: ', ticker)
+# mean and std return
+mean_return = 100.0 * bsx_df['return'].mean()
+std_return = 100.0 * bsx_df['return'].std()
 
-# Setup column names for the dataframe
-cols = ['trade_date', 'td_year', 'td_month', 'td_day', 'td_weekday',
-        'td_week_number', 'td_year_week', 'open', 'high', 'low', 'close', 
-        'volume', 'adj_close', 'return,', 'short_ma', 'long_ma', 'label']
+# setup bounds
+low_bound = mean_return - 2 * std_return
+upper_bound = mean_return + 2 * std_return
 
-# Create dataframe
-bsx_df = pd.DataFrame([sub.split(',') for sub in lines], columns = cols)
-
-# Drop the first row which contains the header since the column names are
-# set during the dataframe construction
-bsx_df = bsx_df.drop([0], axis = 0)
+# Apply formatting with 2 digit precision across the open price column
+bsx_df.open = bsx_df.iloc[:,7].apply(lambda x : "%.2f"%x)
+bsx_df['last_digit'] = bsx_df['open'].apply(lambda x: int(str(x)[-1]))
 
 # Convert open price to float
 bsx_df.open = bsx_df.open.astype(float)
 
-# Apply formatting with 2 digit precision across the open price column
-bsx_df.iloc[:,7] = bsx_df.iloc[:,7].apply(lambda x : "%.2f"%x)
+# create count column, set all values to 1
+bsx_df['count'] = 1
 
-# Declare empty variables for storing how many of each occured
-zero = 0
-one = 0
-two = 0
-three = 0
-four = 0
-five = 0
-six = 0
-seven = 0
-eight = 0
-nine = 0
+# count occurrences of each digit
+digits_total = bsx_df.groupby(['last_digit'])['count'].sum()
+actual = 100 * digits_total / len(bsx_df)
 
-# For loop to count the digits occurances
-for i in range(len(bsx_df) -1):
-    if bsx_df.iloc[i,7][-1] == '0':
-        zero = zero + 1
-    if bsx_df.iloc[i,7][-1] == '1':
-        one = one + 1
-    if bsx_df.iloc[i,7][-1] == '2':
-        two = two + 1
-    if bsx_df.iloc[i,7][-1] == '3':
-        three = three + 1
-    if bsx_df.iloc[i,7][-1] == '4':
-        four = four + 1
-    if bsx_df.iloc[i,7][-1] == '5':
-        five = five + 1
-    if bsx_df.iloc[i,7][-1] == '6':
-        six = six + 1
-    if bsx_df.iloc[i,7][-1] == '7':
-        seven = seven + 1
-    if bsx_df.iloc[i,7][-1] == '8':
-        eight = eight + 1
-    if bsx_df.iloc[i,7][-1] == '9':
-        nine = nine + 1    
+# Create array of 10 10's to represent the likelihood of each digit
+predicted = np.array([10,10,10,10,10,10,10,10,10,10])
 
-lst = {'zero': zero, 'one': one, 'two': two, 'three': three, 'four': four,
-      'five': five, 'six': six, 'seven': seven, 'eight': eight, 'nine': nine}
+# Mean squared error is the mean of actual minus predicted squared
+mse = np.mean((actual - predicted)**2)
 
-# Q1
+# 1)
 # Most frequent digit
-max(lst.items())
+print('The most frequent digit is:', 
+      digits_total[digits_total == max(digits_total)].index[0],
+      'occurring', max(digits_total), 'times')
 
-# Q2
-# 
-min(lst.items())
+# 2)
+# least frequent digit
+print('The least frequent digit is:', 
+      digits_total[digits_total == min(digits_total)].index[0],
+      'Occuring', min(digits_total), 'times')
+
+# 3)
+# a)
+print('The max absolute error is:', round(max(actual - predicted), 4))
+
+# b)
+print('The median absolute error is:', round(s.median(actual - predicted), 4))
+
+# c)
+print('The mean absolute error is:', round(s.mean(actual - predicted), 4))
+
+# d)
+print('The root mean squared error is:', round(m.sqrt(mse), 4))
+
