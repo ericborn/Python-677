@@ -15,7 +15,7 @@ import math as m
 
 ticker='BSX'
 modifier = '-labeled'
-input_dir = r'C:\Users\TomBrody\Desktop\School\677\wk2'
+input_dir = r'C:\Users\TomBrody\Desktop\School\677\wk2\Last Digit'
 ticker_file = os.path.join(input_dir, ticker + modifier +'.csv')
 
 try:
