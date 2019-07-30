@@ -29,9 +29,25 @@ df_2018 = df.loc[df['td_year']==2018]
 df_2017 = df_2017.reset_index(level=0, drop=True)
 df_2018 = df_2018.reset_index(level=0, drop=True)  
 
+# Create reduced dataframe only containing week number, mu, sig and label
+df_2017_reduced = pd.DataFrame( {'week nbr' : range(1, 53),
+                        'mu'   : df_2017.groupby('td_week_number')['return'].mean(),
+                        'sig'  : df_2017.groupby('td_week_number')['return'].std(),
+                        'label': df_2017.groupby('td_week_number')['label'].first()})
 
+# Create reduced dataframe only containing week number, mu, sig and label
+df_2018_reduced = pd.DataFrame( {'week nbr' : range(0, 53),
+                        'mu'   : df_2018.groupby('td_week_number')['return'].mean(),
+                        'sig'  : df_2018.groupby('td_week_number')['return'].std(),
+                        'label': df_2018.groupby('td_week_number')['label'].first()})
 
+# Replacing nan in week 52 sigma column with a zero due to 
+# there being only 1 trading day that week.
+df_2018_reduced = df_2018_reduced.fillna(0)
 
+# remove index name labels from dataframes
+del df_2017_reduced.index.name
+del df_2018_reduced.index.name
 
 
 ################
