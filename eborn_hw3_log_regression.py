@@ -10,6 +10,9 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.metrics import confusion_matrix
 
 # setup input directory and filename
 input_dir = r'C:\Users\TomBrody\Desktop\School\677\wk3\logistic regression'
@@ -49,20 +52,36 @@ df_2018_reduced = df_2018_reduced.fillna(0)
 del df_2017_reduced.index.name
 del df_2018_reduced.index.name
 
+x_2017 = df_2017_reduced[['mu', 'sig']].values
 
-################
-data = pd.DataFrame(
-        {'id': [ 1,2,3,4,5,6,7,8],
-        'Label': ['green', 'green', 'green', 'green', 'red', 'red', 'red', 'red'],
-        'Height': [5, 5.5, 5.33, 5.75, 6.00, 5.92,  5.58, 5.92],
-        'Weight': [100, 150, 130, 150, 180, 190, 170, 165], 
-        'Foot': [6, 8, 7, 9, 13, 11, 12, 10]},
-         columns = ['id', 'Height', 'Weight', 'Foot', 'Label']
-        )
+scaler = StandardScaler()
+scaler.fit(x_2017)
+x_2017_train = scaler.transform(x_2017)
+y_2017_train = df_2017_reduced['label'].values
 
-data['class'] = data['Label'].apply(lambda x: 1 if x=='green' else 0)
-x = data[['Height', 'Foot']].values
-y = data['class'].values
+log_reg_classifier = LogisticRegression()
+log_reg_classifier.fit(x_2017_train, y_2017_train)
+#new_x = scaler.transform(np.asmatrix ([6 , 160]))
+
+#####
+# build prediction data
+x_2018 = df_2018_reduced[['mu', 'sig']].values
+
+scaler = StandardScaler()
+scaler.fit(x_2018)
+x_2018_test = scaler.transform(x_2018)
+y_2018_test = df_2018_reduced['label'].values
+
+predicted = log_reg_classifier.predict(x_2018_test)
+accuracy = log_reg_classifier.score(x_2018_test, y_2018_test)
+
+labels=['Green', 'Red', 'Green', 'Red']
+
+confusion_matrix(y_2018_test, predicted)
+
+#########################
+
+
 
 N = len(y)
 learning_rate = 0.01
@@ -76,7 +95,6 @@ def loss(h, y):
 def add_intercept(X):
         intercept = np.ones((X.shape[0], 1))
         return np.concatenate((intercept, X), axis=1)
-
 
 threshold = 0.1
 n=5
@@ -106,18 +124,18 @@ fig = plt.figure(figsize=(5, 5))
 ax = plt.gca()
 
 
-df = data[data['Label']=='red']
-plt.scatter(df['Height'].values, df['Foot'].values, color='red',
+df = df_2017_reduced[df_2017_reduced['label']=='red']
+plt.scatter(df_2017_reduced['mu'].values, df_2017_reduced['sig'].values, color='red',
             s= 100, label='Class 0')
 
-df = data[data['Label']=='green']
-plt.scatter(df['Height'].values, df['Foot'].values, color='green',
+df = df_2017_reduced[df_2017_reduced['label']=='green']
+plt.scatter(df['mu'].values, df['sig'].values, color='green',
             s= 100, label='Class 1')
 
-for i in range(len(data)):
-    x_text = data['Height'].iloc[i] + 0.05
-    y_text = data['Foot'].iloc[i] + 0.2
-    id_text = data['id'].iloc[i]
+for i in range(len(df_2017_reduced)):
+    x_text = df_2017_reduced['mu'].iloc[i] + 0.05
+    y_text = df_2017_reduced['sig'].iloc[i] + 0.2
+    id_text = df_2017_reduced['week nbr'].iloc[i]
     plt.text(x_text, y_text, str(id_text), fontsize=14)
 
 
@@ -156,8 +174,8 @@ plt.plot([h_1,h_2], [f_1, f_2], color='blue', label=str(iterations) + ' iteratio
 
 
 
-plt.xlabel('Height')
-plt.ylabel('Foot')
+plt.xlabel('mu')
+plt.ylabel('sig')
 plt.legend(loc='upper left')
 plt.text(5.5,14,'learn.rate = ' + str(learning_rate), fontsize=14)
 
