@@ -81,14 +81,15 @@ X = scaler.transform(X)
 # divide X and Y into test/train 50/50
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.5, 
                                                     random_state = 3)
-
 # Create empty lists to store the models error rate and 
 # accuracy across various K's
 error_rate = []
 accuracy = []
 k_value = []
 
-# Test the model using 2018 data with k neighbors set to 3,5,7,9 and 11
+# 1)
+# For loop to test the model using 2017 data
+# with k neighbors set to 3, 5, 7, 9 and 11
 try:
     for k in range (3, 13, 2):
         # Create the classifier with neighbors set to k from the loop
@@ -109,7 +110,7 @@ except Exception as e:
     print('failed to build the KNN classifier.')
 
 for i in range (0,5):
-    print('For K =', k_value[i], 'the accuracy is:', accuracy[i])
+    print('For K =', k_value[i], 'the accuracy on 2017 data is:', accuracy[i])
     
 # create a plot to display the accuracy of the model across K
 fig = plt.figure(figsize=(10, 4))
@@ -120,12 +121,56 @@ plt.title('Accuracy vs. k for stock labels')
 plt.xlabel('Number of neighbors: k')
 plt.ylabel('Accuracy')
 
-
-###########
-# create x and y test sets for 2018
+# 2)
+# setup and test on 2018 data with k = 5
+# Create x test set for 2018
 x_test = df_2018_reduced[features].values
-y_test = df_2018_reduced['label'].values
+y_2018_test = df_2018_reduced['label'].values
 
 # scaler for 2018 test data
 scaler.fit(x_test)
 x_2018_test = scaler.transform(x_test)
+
+# Create the classifier with neighbors set to 5
+knn_2018 = KNeighborsClassifier(n_neighbors = 5)
+
+# Train the classifier using all of 2017 data
+knn_2018.fit(X, Y)
+        
+# Perform predictions on 2018 data
+pred_2018 = knn_2018.predict(x_2018_test)
+
+# Capture error and accuracy rates for 2018 predictions
+error_2018 = round(np.mean(pred_2018 != y_2018_test) * 100, 2)
+accuracy_2018 = round(sum(pred_2018 == y_2018_test) / len(pred_2018) * 100, 2)
+
+# accuracy is 83.13%
+print('\nFor K = 5 the accuracy on 2018 data is:', accuracy_2018, '%')
+
+# 3)
+# Output the confusion matrix
+cm = confusion_matrix(y_2018_test, pred_2018)
+print('\nConfusion matrix for year 2 predictions:')
+print(cm, '\n')
+
+# Create confusion matrix heatmap
+# setup class names and tick marks
+class_names=[0,1]
+fig, ax = plt.subplots()
+tick_marks = np.arange(len(class_names))
+plt.xticks(tick_marks, class_names)
+plt.yticks(tick_marks, class_names)
+
+# Create heatmap and labels
+sns.heatmap(pd.DataFrame(cm), annot=True, cmap="BrBG", fmt='g')
+ax.xaxis.set_label_position("top")
+plt.tight_layout()
+plt.title('Confusion matrix', y=1.1)
+plt.ylabel('Actual label')
+plt.xlabel('Predicted label')
+
+# 4)
+# what is true positive rate (sensitivity or recall) and true
+# negative rate (specificity) for year 2?
+print('The sensitivity is: 20/29 = 0.69 = 69%')	
+print('The specificity is: 22/24 = 0.917 = 91.7%')
