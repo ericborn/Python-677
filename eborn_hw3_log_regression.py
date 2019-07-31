@@ -13,11 +13,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-#import scipy
 from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import confusion_matrix
-
 
 # setup input directory and filename
 ticker = 'BSX-labeled'
@@ -26,71 +24,43 @@ ticker_file = os.path.join(input_dir, ticker + '.csv')
 
 # read csv file into dataframe
 try:
-    with open(ticker_file) as f:
-        lines = f.read().splitlines()
-        # list_lines = lines.split('\n')
-    print('opened file for ticker: ', ticker)
+    df = pd.read_csv(ticker_file)
+    print('opened file for ticker: ', ticker,'\n')
 
 except Exception as e:
     print(e)
     print('failed to read stock data for ticker: ', ticker)
 
-# Setup column names for the dataframe
-cols = ['trade_date', 'td_year', 'td_month', 'td_day', 'td_weekday',
-        'td_week_number', 'td_year_week', 'open', 'high', 'low', 'close', 
-        'volume', 'adj_close', 'returns', 'short_ma', 'long_ma', 'label']
-
-# Create dataframe
-bsx_df = pd.DataFrame([sub.split(',') for sub in lines], columns = cols)
-
-# Drop the first row which contains the header since the column names are
-# set during the dataframe construction
-bsx_df = bsx_df.drop([0], axis = 0)
-
 # Create class column where red = 0 and green = 1
-try:
-    bsx_df['class'] = bsx_df['label'].apply(lambda x: 1 if x =='green' else 0)
-    
-except Exception as e:
-    print(e)
-    print('failed to add class column to bsx_df') 
-
-# explicitly set column types for ease in calculating
-bsx_df.td_year = bsx_df.td_year.astype(int)
-bsx_df.returns = bsx_df.returns.astype(float)
+df['class'] = df['label'].apply(lambda x: 1 if x =='green' else 0)
 
 # create separate dataframes for 2017 and 2018 data
-df_2017 = bsx_df.loc[bsx_df['td_year']==2017]
-df_2018 = bsx_df.loc[bsx_df['td_year']==2018]
+df_2017 = df.loc[df['td_year']==2017]
+df_2018 = df.loc[df['td_year']==2018]
 
 # reset indexes
-#df_2017 = df_2017.reset_index(level=0, drop=True)
-#df_2018 = df_2018.reset_index(level=0, drop=True)  
+df_2017 = df_2017.reset_index(level=0, drop=True)
+df_2018 = df_2018.reset_index(level=0, drop=True)  
 
 # Create reduced dataframe only containing week number, mu, sig and label
 df_2017_reduced = pd.DataFrame( {'week nbr' : range(1, 53),
-                'mu'    : df_2017.groupby('td_week_number')['returns'].mean(),
-                'sig'   : df_2017.groupby('td_week_number')['returns'].std(),
+                'mu'    : df_2017.groupby('td_week_number')['return'].mean(),
+                'sig'   : df_2017.groupby('td_week_number')['return'].std(),
                 'label' : df_2017.groupby('td_week_number')['class'].first()})
 
 # Create reduced dataframe only containing week number, mu, sig and label
 df_2018_reduced = pd.DataFrame( {'week nbr' : range(0, 53),
-                'mu'    : df_2018.groupby('td_week_number')['returns'].mean(),
-                'sig'   : df_2018.groupby('td_week_number')['returns'].std(),
+                'mu'    : df_2018.groupby('td_week_number')['return'].mean(),
+                'sig'   : df_2018.groupby('td_week_number')['return'].std(),
                 'label' : df_2018.groupby('td_week_number')['class'].first()})
 
-# reset indexes
-df_2017_reduced = df_2017_reduced.reset_index(level=0, drop=True)
-df_2018_reduced = df_2018_reduced.reset_index(level=0, drop=True)      
-    
-    
 # Replacing nan in week 52 sigma column with a zero due to 
 # there being only 1 trading day that week.
 df_2018_reduced = df_2018_reduced.fillna(0)
 
 # remove index name labels from dataframes
-#del df_2017_reduced.index.name
-#del df_2018_reduced.index.name
+del df_2017_reduced.index.name
+del df_2018_reduced.index.name
 
 # Define features and class labels
 features = ['mu', 'sig']
@@ -125,28 +95,32 @@ log_reg_classifier.fit(x_2017_train, y_train)
 prediction = log_reg_classifier.predict(x_2018_test)
 
 # print coefficient and intercept
-print(log_reg_classifier.coef_)
-print(log_reg_classifier.intercept_)
+# print(log_reg_classifier.coef_)
+# print(log_reg_classifier.intercept_)
 
-# print coefficients with feature names
+print('output the coefficients with feature names')
 coef = log_reg_classifier.coef_
 for p,c in zip(features,list(coef[0])):
     print(p + '\t' + str(c))
 
 # 1)
-# The equation for logistic regression found in year 1 data
-#y = 0.1621 + 2.0277*mu - 0.0168*sig
+# what is the equation for logistic regression that your 
+# classifier found from year 1 data?
+print('\nThe equation for logistic regression found in year 1 data is:')
+print('y = 0.1621 + 2.0277*mu - 0.0168*sig')
 
 # 2)
-# Check the predicitons accuracy
+# what is the accuracy for year 2?
 # 79.245% accuracy
 accuracy = np.mean(prediction == y_test)
-print(accuracy)
+print('\nThe accuracy for year 2 is:')
+print(round(accuracy * 100, 2), '%')
 
 # 3)
 # Output the confusion matrix
 cm = confusion_matrix(y_test, prediction)
-print(cm)
+print('\nConfusion matrix for year 2 predictions:')
+print(cm, '\n')
 
 # Create confusion matrix heatmap
 # setup class names and tick marks
@@ -164,12 +138,17 @@ plt.title('Confusion matrix', y=1.1)
 plt.ylabel('Actual label')
 plt.xlabel('Predicted label')
 
-# 4)	
-#TPR = 20/29 = 0.69 = 69%
-#TNR = 22/24 = 0.917 = 91.7%
+
+# 4)
+# what is true positive rate (sensitivity or recall) and true
+# negative rate (specificity) for year 2?
+print('The sensitivity is: 20/29 = 0.69 = 69%')	
+print('The specificity is: 22/24 = 0.917 = 91.7%')
 
 # 5)
-# Buy and hold
+# Implemented trading strategy based upon label predicitons vs
+# buy and hold strategy
+
 # Initialize wallet and shares to track current money and number of shares.
 wallet = 100.00
 shares = 0
