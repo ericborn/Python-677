@@ -15,7 +15,7 @@ import pandas as pd
 import seaborn as sns
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, recall_score
 
 # setup input directory and filename
 ticker = 'BSX-labeled'
@@ -34,11 +34,12 @@ except Exception as e:
 # Create class column where red = 0 and green = 1
 df['class'] = df['label'].apply(lambda x: 1 if x =='green' else 0)
 
-# create separate dataframes for 2017 and 2018 data
+# Create separate dataframes for 2017 and 2018 data
+# 2017 will be used as training, 2018 as testing for the model
 df_2017 = df.loc[df['td_year']==2017]
 df_2018 = df.loc[df['td_year']==2018]
 
-# reset indexes
+# Reset indexes
 df_2017 = df_2017.reset_index(level=0, drop=True)
 df_2018 = df_2018.reset_index(level=0, drop=True)  
 
@@ -58,15 +59,14 @@ df_2018_reduced = pd.DataFrame( {'week nbr' : range(0, 53),
 # there being only 1 trading day that week.
 df_2018_reduced = df_2018_reduced.fillna(0)
 
-# remove index name labels from dataframes
+# Remove index name labels from dataframes.
 del df_2017_reduced.index.name
 del df_2018_reduced.index.name
 
-# Define features and class labels
+# Define features labels.
 features = ['mu', 'sig']
-class_labels = ['green', 'red']
 
-# create x training and test sets from 2017/2018 features values
+# Create x training and test sets from 2017/2018 features values.
 x_train = df_2017_reduced[features].values
 x_test = df_2018_reduced[features].values
 
@@ -80,7 +80,7 @@ scaler = StandardScaler()
 scaler.fit(x_train)
 x_2017_train = scaler.transform(x_train)
 
-# scaler for test data
+# Scaler for test data
 scaler.fit(x_test)
 x_2018_test = scaler.transform(x_test)
 
@@ -130,7 +130,7 @@ tick_marks = np.arange(len(class_names))
 plt.xticks(tick_marks, class_names)
 plt.yticks(tick_marks, class_names)
 
-# create heatmap and labels
+# Create heatmap and labels
 sns.heatmap(pd.DataFrame(cm), annot=True, cmap="BrBG" ,fmt='g')
 ax.xaxis.set_label_position("top")
 plt.tight_layout()
@@ -138,12 +138,12 @@ plt.title('Confusion matrix', y=1.1)
 plt.ylabel('Actual label')
 plt.xlabel('Predicted label')
 
-
 # 4)
 # what is true positive rate (sensitivity or recall) and true
 # negative rate (specificity) for year 2?
-print('The sensitivity is: 20/29 = 0.69 = 69%')	
-print('The specificity is: 22/24 = 0.917 = 91.7%')
+print('The recall is: 22/24 =', 
+      round(recall_score(y_test, prediction) * 100, 2),'%')
+print('The specificity is: 20/29 = 68.97%')	
 
 # 5)
 # Implemented trading strategy based upon label predicitons vs
@@ -160,8 +160,8 @@ adj_close = df_2018.groupby('td_week_number')['adj_close'].last()
 # stores open price for the first day of each trading week
 open_price = df_2018.groupby('td_week_number')['open'].first()
 
-
-
+# for loop that evaluates the dataset deciding when to buy/sell based
+# upon the prediction labels. 0 is a bad week, 1 is a good week
 try:
     for i in range(0, len(prediction)):
         # Sell should occur on the last day of a green week at 
@@ -213,10 +213,10 @@ worth = round(shares * adj_close[52], 2)
 profit = round(worth - 100.00, 2)
 
 #Currently own 4.009623 shares 
-#Worth $ 141.7
+#Worth $ 141.70
 #Selling on the final day would result in $ 141.7 a profit of $ 41.7
 print('\n2018 buy and hold:','\nCurrently own', shares, 'shares',
-      '\nWorth','$',round(worth, 2))
-print('Selling on the final day would result in $', worth, 'a profit of $', profit)
+      '\nWorth','$',"%.2f"%round(worth, 2))
+print('Selling on the final day would result in $',"%.2f"%worth, 'a profit of $', "%.2f"%profit)
 
 
