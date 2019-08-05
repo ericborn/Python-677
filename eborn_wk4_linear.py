@@ -54,7 +54,7 @@ for i in range(5, 31):
 
 # Creates columns and stores the average return on a sliding 
 # window between 5 and 30.
-df_avg = pd.DataFrame()
+df_returns = pd.DataFrame()
 stock_mean = []
 t = 0
 for i in range(5,31):
@@ -62,15 +62,33 @@ for i in range(5,31):
     w = i
     p = 0
     for k in range(0, len(df_2017)):
-        stock_mean.append([round(df_2017.iloc[p:w,-4].mean(), 4)])
+        stock_mean.append(round(df_2017.iloc[p:w,-4].mean(), 4))
         p += 1
         w += 1
-    df_avg[columns[t]] = stock_mean
+    df_returns[columns[t]] = stock_mean
     t += 1
 
-df_avg.iloc[:,0]
+df_returns.columns
+
+df_returns.iloc[:,0].mean()
+
+# Create a list containing dictionaries for each window size and yearly 
+# average returns
+df_avg = []
+for i in range(0, len(columns)):
+    df_avg.append([columns[i], round(df_returns.iloc[:,i].mean(), 8)])
+    #df_avg.append({columns[i]: round(df_returns.iloc[:,i].mean(), 8)})
 
 
+
+print(df_avg[1][1])
+    
+
+for i in range(len(df_avg)):
+    plt.scatter(df_avg[i][0], df_avg[i][1], color='blue')
+plt.ylim(-0.0001, 0.0005)
+plt.show()
+    
 # Create dataframe that holds columns relating to the stocks daily activity
 X = df_2017.iloc[:,np.r_[7:13, 14:16]]
 
@@ -78,7 +96,7 @@ X = df_2017.iloc[:,np.r_[7:13, 14:16]]
 lm = LinearRegression()
 
 # Fit the model using stock activity inside X and the adjusted closing price
-lm.fit(X, df_2017.returns)
+lm.fit(X, df_avg.iloc[:,0])
 
 
 coeff_df = pd.DataFrame({'features': X.columns.values,
@@ -95,7 +113,7 @@ plt.show()
 lm.predict(X)[:5]   
 
 # Compare predicted against real returns
-plt.scatter(df_2017.returns, lm.predict(X))
+plt.scatter(df_avg.iloc[:,0]* 1000, lm.predict(X) * 1000)
 plt.xlabel('returns')
 plt.ylabel('predicted returns')
 plt.title('Real vs. Predicted returns')
