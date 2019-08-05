@@ -39,57 +39,77 @@ df_2018 = df.loc[df['td_year']==2018]
 df_2017 = df_2017.reset_index(level=0, drop=True)
 df_2018 = df_2018.reset_index(level=0, drop=True)  
 
-# set week numbers to be even with 2018 data
-# df_2017.loc[:,'td_week_number'] = df_2017.loc[:,'td_week_number'] - 1
 
-df_2017.iloc[0:10,-5].mean()
+
+df_2017.iloc[0:10,-4].mean()
+
+
+# Creates a list of columns that are named by the window size that is used
+# to create a dataframe containing the mean returns calculated from that
+# window size
+columns = []
+
+for i in range(5, 31):
+    columns.append(str(i))
+
+# Creates columns and stores the average return on a sliding 
+# window between 5 and 30.
+df_avg = pd.DataFrame()
+stock_mean = []
+t = 0
+for i in range(5,31):
+    stock_mean = []
+    w = i
+    p = 0
+    for k in range(0, len(df_2017)):
+        stock_mean.append([round(df_2017.iloc[p:w,-4].mean(), 4)])
+        p += 1
+        w += 1
+    df_avg[columns[t]] = stock_mean
+    t += 1
+
+df_avg.iloc[:,0]
+
 
 # Create dataframe that holds columns relating to the stocks daily activity
-X = df_2017.iloc[:,np.r_[7:11, 13:15]]
+X = df_2017.iloc[:,np.r_[7:13, 14:16]]
 
 # Creates a linear regression object
 lm = LinearRegression()
 
 # Fit the model using stock activity inside X and the adjusted closing price
-lm.fit(X, df_2017.adj_close)
+lm.fit(X, df_2017.returns)
 
 
 coeff_df = pd.DataFrame({'features': X.columns.values,
                         'estimatedCoefficient': lm.coef_})
 
-plt.scatter(df_2017.low, df_2017.adj_close, color='red')
-plt.xlabel('low')
-plt.ylabel('adjusted close')
-plt.title('low vs. adjusted close')
+plt.scatter(df_2017.returns, df_2017.long_ma, color='red')
+plt.xlabel('long_ma')
+plt.ylabel('return')
+plt.title('long_ma vs. return')
 plt.show()
     
 
+# first 5 predicted prices
+lm.predict(X)[:5]   
 
-stock_mean = []
-for i in range(5,7):
-    w = i
-    p = 0
-    for k in range(0, len(df_2017)):
-        stock_mean.append([i, round(df_2017.iloc[p:w,-5].mean(), 2)])
-        p += 1
-        w += 1
-
-
-
-stock_mean[0:10]
+# Compare predicted against real returns
+plt.scatter(df_2017.returns, lm.predict(X))
+plt.xlabel('returns')
+plt.ylabel('predicted returns')
+plt.title('Real vs. Predicted returns')
+plt.show()
 
 
 
 
-X = bos.drop('PRICE', axis = 1)
-
-
-lm = LinearRegression()
-
-lm.fit(X, bos.PRICE)
 
 
 
+
+# set week numbers to be even with 2018 data
+# df_2017.loc[:,'td_week_number'] = df_2017.loc[:,'td_week_number'] - 1
 
 # remove index name labels from dataframes
 del df_2017_reduced.index.name
