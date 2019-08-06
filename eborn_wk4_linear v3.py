@@ -13,8 +13,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import sys
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
+
+# Set display options for dataframes
+pd.set_option('display.max_rows', 200)
+pd.set_option('display.width', 500)
+pd.set_option('display.max_columns', 50)
 
 # setup input directory and filename
 ticker = 'BSX-labeled'
@@ -29,6 +35,7 @@ try:
 except Exception as e:
     print(e)
     print('failed to read stock data for ticker: ', ticker)
+    sys.exit(0)
 
 # Create separate dataframes for 2017 and 2018 data
 # 2017 will be used as training, 2018 as testing for the model
@@ -56,58 +63,64 @@ lm = LinearRegression()
 # df_returns = pd.DataFrame()
 # ret_dict = {}
 # t = 0
-df_2017.iloc[0:5, -8]
-w = 5
-s = 0
-window = 6
-df_2017.loc[w, 'position'] = 1
-position = []
+#df_2017.iloc[0:5, -8]
+#w = 4
+#s = 0
+#window = 5
+#df_2017.loc[w, 'position'] = 1
+
+# stores the position 0, 1, -1 for each window size
+position_df  = pd.DataFrame()
+#position2_df = pd.DataFrame()
+
 # window = number of days to evalute before making a prediction values 5-30
 # adj_close price is used to train the regression model
 # close price is being predicted
-# w = window - 1 = total size of the window
-# s = start of the window
+# window_end = window - 1 = total size of the window
+# window_start = start of the window
 # X = array of adj_close prices inside window (x axis)
 # y = array of close prices inside window (y axis)
-for window in range(5,10):
-    w = window - 1
-    s = 0
+for window in range(5,31):
+    # resets the position values to 0
+    df_2017['position'] = 0
+    
+    # set window_end equal to window - 1 due to zero index
+    window_start = 0
+    window_end = window - 1
+    
     # loop that handles gathering the adj_close and close price 
     # for the appropriate window size
     for k in range(0, len(df_2017)):
-        #print(k)
-        X = np.array(df_2017.loc[s:w, 'adj_close']).reshape(-1, 1)
-        y = np.array(df_2017.loc[s:w, 'close']).reshape(-1, 1)
-        #y = df_2017.iloc[s:w, -8]
+        X = np.array(df_2017.loc[window_start:window_end,
+                                 'adj_close']).reshape(-1, 1)
+        y = np.array(df_2017.loc[window_start:window_end,
+                                 'close']).reshape(-1, 1)
         lm.fit(X, y)
         
         # Breaks on the last row since it cannot predict w + 1 if 
         # there is no data for the next day, else it creates
         # a prediction.
-        if w == len(df_2017) - 1:
+        if window_end == len(df_2017) - 1:
             break
         else:
-            pred = lm.predict(np.array(df_2017.loc[w + 1, 'adj_close']).reshape(-1, 1))
+            pred = lm.predict(np.array(df_2017.loc[window_end + 1, 
+                                      'adj_close']).reshape(-1, 1))
         
         # updates the position column with a 1 when prediciton for tomorrows
         # close price (w + 1) is greater than the close price of w.
         # Else it marks it with a -1 to indicate a lower price.
-        if float(pred) >= df_2017.loc[w, 'close']:
-            df_2017.loc[w, 'position'] = 1
+        if float(pred) >= df_2017.loc[window_end, 'close']:
+            df_2017.loc[window_end, 'position'] = 1
         else:
-            df_2017.loc[w, 'position'] = -1
-        s += 1
-        w += 1
-    position.append(df_2017.loc[:, 'position'].values)
-
-
-
-
-df_2017.loc[:, 'position'].values
-
-w = 249
-s = 245
-
+            df_2017.loc[window_end, 'position'] = -1
+        window_start += 1
+        window_end += 1
+    
+    # writes the position column to a the position dataframe after each
+    # window iteration
+    position_df[str(window)] = df_2017.loc[:, 'position']
+    
+    
 # Initialize wallet and shares to track current money and number of shares.
 wallet = 100.00
 shares = 0
