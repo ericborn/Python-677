@@ -53,19 +53,33 @@ lm = LinearRegression()
 #for i in range(5, 31):
 #    columns.append(str(i))
 
-# Creates columns and stores the average return on a sliding 
-# window between 5 and 30.
-df_returns = pd.DataFrame()
-ret_dict = {}
-t = 0
-for window in range(5,6):
-    w = window
-    p = 0
+# df_returns = pd.DataFrame()
+# ret_dict = {}
+# t = 0
+df_2017.iloc[0:5, -8]
+w = 5
+s = 0
+window = 6
+df_2017.loc[w, 'position'] = 1
+position = []
+# window = number of days to evalute before making a prediction values 5-30
+# adj_close price is used to train the regression model
+# close price is being predicted
+# w = window - 1 = total size of the window
+# s = start of the window
+# X = array of adj_close prices inside window (x axis)
+# y = array of close prices inside window (y axis)
+for window in range(5,10):
+    w = window - 1
+    s = 0
     # loop that handles gathering the adj_close and close price 
     # for the appropriate window size
     for k in range(0, len(df_2017)):
-        X = np.array(df_2017.iloc[p:w, -6]).reshape(-1, 1)
-        lm.fit(X, df_2017.iloc[p:w, -8])
+        #print(k)
+        X = np.array(df_2017.loc[s:w, 'adj_close']).reshape(-1, 1)
+        y = np.array(df_2017.loc[s:w, 'close']).reshape(-1, 1)
+        #y = df_2017.iloc[s:w, -8]
+        lm.fit(X, y)
         
         # Breaks on the last row since it cannot predict w + 1 if 
         # there is no data for the next day, else it creates
@@ -73,18 +87,26 @@ for window in range(5,6):
         if w == len(df_2017) - 1:
             break
         else:
-            pred = lm.predict(np.array(df_2017.iloc[w + 1, -6]).reshape(-1, 1))
+            pred = lm.predict(np.array(df_2017.loc[w + 1, 'adj_close']).reshape(-1, 1))
         
-        # updates the position column with a 1 when prediciton is
-        # higher than the actual close price value
-        if float(pred) > df_2017.iloc[w, -6]:
-            df_2017.iloc[w, -1] = 1
+        # updates the position column with a 1 when prediciton for tomorrows
+        # close price (w + 1) is greater than the close price of w.
+        # Else it marks it with a -1 to indicate a lower price.
+        if float(pred) >= df_2017.loc[w, 'close']:
+            df_2017.loc[w, 'position'] = 1
         else:
-            df_2017.iloc[w, -1] = -1
-        p += 1
+            df_2017.loc[w, 'position'] = -1
+        s += 1
         w += 1
-    #df_returns[columns[t]] = stock_mean
-    #t += 1
+    position.append(df_2017.loc[:, 'position'].values)
+
+
+
+
+df_2017.loc[:, 'position'].values
+
+w = 249
+s = 245
 
 # Initialize wallet and shares to track current money and number of shares.
 wallet = 100.00
