@@ -14,11 +14,10 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import sys
-from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression
 
 # Set display options for dataframes
-pd.set_option('display.max_rows', 200)
+pd.set_option('display.max_rows', 100)
 pd.set_option('display.width', 500)
 pd.set_option('display.max_columns', 50)
 
@@ -34,8 +33,7 @@ try:
 
 except Exception as e:
     print(e)
-    print('failed to read stock data for ticker: ', ticker)
-    sys.exit(0)
+    sys.exit('failed to read stock data for ticker: '+ str(ticker))
 
 # Create separate dataframes for 2017 and 2018 data
 # 2017 will be used as training, 2018 as testing for the model
@@ -47,41 +45,24 @@ df_2017 = df_2017.reset_index(level=0, drop=True)
 df_2018 = df_2018.reset_index(level=0, drop=True)  
 
 # Create position column to indicate whether its a buy or sell day.
-df_2017['position'] = 0
+#df_2017['position'] = 0
 
 # Creates a linear regression object
 lm = LinearRegression()
 
-# Creates a list of columns that are named by the window size that is used
-# to create a dataframe containing the mean returns calculated from that
-# window size.
-#columns = []
-
-#for i in range(5, 31):
-#    columns.append(str(i))
-
-# df_returns = pd.DataFrame()
-# ret_dict = {}
-# t = 0
-#df_2017.iloc[0:5, -8]
-#w = 4
-#s = 0
-#window = 5
-#df_2017.loc[w, 'position'] = 1
-
 # stores the position 0, 1, -1 for each window size
 position_df  = pd.DataFrame()
-#position2_df = pd.DataFrame()
 
 # window = number of days to evalute before making a prediction values 5-30
 # adj_close price is used to train the regression model
 # close price is being predicted
 # window_end = window - 1 = total size of the window
 # window_start = start of the window
-# X = array of adj_close prices inside window (x axis)
-# y = array of close prices inside window (y axis)
+# adj_close = array of adj_close prices inside window (x axis)
+# close = array of close prices inside window (y axis)
 for window in range(5,31):
-    # resets the position values to 0
+    # Create position column to indicate whether its a buy or sell day.
+    # column is reset to all 0's at the start of each loop iteration
     df_2017['position'] = 0
     
     # set window_end equal to window - 1 due to zero index
@@ -91,11 +72,11 @@ for window in range(5,31):
     # loop that handles gathering the adj_close and close price 
     # for the appropriate window size
     for k in range(0, len(df_2017)):
-        X = np.array(df_2017.loc[window_start:window_end,
+        adj_close = np.array(df_2017.loc[window_start:window_end,
                                  'adj_close']).reshape(-1, 1)
-        y = np.array(df_2017.loc[window_start:window_end,
+        close = np.array(df_2017.loc[window_start:window_end,
                                  'close']).reshape(-1, 1)
-        lm.fit(X, y)
+        lm.fit(adj_close, close)
         
         # Breaks on the last row since it cannot predict w + 1 if 
         # there is no data for the next day, else it creates
@@ -127,7 +108,7 @@ shares = 0
 worth = 0
 
 
-
+position_df.iloc[:, 0]
 
 
 
