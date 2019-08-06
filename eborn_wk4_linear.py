@@ -39,19 +39,44 @@ df_2018 = df.loc[df['td_year']==2018]
 df_2017 = df_2017.reset_index(level=0, drop=True)
 df_2018 = df_2018.reset_index(level=0, drop=True)  
 
+# Create position column to indicate whether its a buy or sell day.
+df_2017['position'] = 0
 
-
-df_2017.iloc[0:10,-4].mean()
-
+# Creates a linear regression object
+lm = LinearRegression()
 
 # Creates a list of columns that are named by the window size that is used
 # to create a dataframe containing the mean returns calculated from that
-# window size
+# window size.
 columns = []
 
 for i in range(5, 31):
     columns.append(str(i))
 
+# Creates columns and stores the average return on a sliding 
+# window between 5 and 30.
+df_returns = pd.DataFrame()
+ret_dict = {}
+t = 0
+for window in range(5,6):
+    #stock_mean = []
+    w = window
+    p = 0
+    for k in range(0, len(df_2017)):
+        X = lm.fit(window, df_2017.iloc[p:w,-5])
+        X.reshape(-1, 1)
+        ret_dict[window] = lm.predict(X)
+        p += 1
+        w += 1
+    #df_returns[columns[t]] = stock_mean
+    #t += 1
+
+
+X = lm.fit(df_2017.iloc[0:5,-5])
+        X.reshape(-1, 1)
+        ret_dict[window] = lm.predict(X)
+
+    
 # Creates columns and stores the average return on a sliding 
 # window between 5 and 30.
 df_returns = pd.DataFrame()
@@ -62,17 +87,20 @@ for i in range(5,31):
     w = i
     p = 0
     for k in range(0, len(df_2017)):
-        stock_mean.append(round(df_2017.iloc[p:w,-4].mean(), 4))
+        lm.fit(i, df_2017.iloc[p:w,-5])
+        #stock_mean.append(round(df_2017.iloc[p:w,-5], 4))
         p += 1
         w += 1
-    df_returns[columns[t]] = stock_mean
-    t += 1
+    #df_returns[columns[t]] = stock_mean
+    #t += 1    
+    
+    
 
 df_returns.columns
 
-df_returns.iloc[:,0].mean()
+df_2017.iloc[:,-5]
 
-# Create a list containing dictionaries for each window size and yearly 
+# Create a list containing values for each window size and yearly 
 # average returns
 df_avg = []
 for i in range(0, len(columns)):
@@ -80,10 +108,8 @@ for i in range(0, len(columns)):
     #df_avg.append({columns[i]: round(df_returns.iloc[:,i].mean(), 8)})
 
 
-
-print(df_avg[1][1])
-    
-
+  
+# create
 for i in range(len(df_avg)):
     plt.scatter(df_avg[i][0], df_avg[i][1], color='blue')
 plt.ylim(-0.0001, 0.0005)
@@ -98,6 +124,7 @@ lm = LinearRegression()
 # Fit the model using stock activity inside X and the adjusted closing price
 lm.fit(X, df_avg.iloc[:,0])
 
+lm.predict(X)
 
 coeff_df = pd.DataFrame({'features': X.columns.values,
                         'estimatedCoefficient': lm.coef_})
