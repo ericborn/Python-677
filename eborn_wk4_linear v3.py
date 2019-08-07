@@ -101,17 +101,77 @@ for window in range(5,31):
     # window iteration
     position_df[str(window)] = df_2017.loc[:, 'position']
     
-    
 # Initialize wallet and shares to track current money and number of shares.
 wallet = 100.00
-shares = 0
-worth = 0
+long_shares = 0
+short_shares = 0
+long_worth = 0
+short_worth = 0
+
+# Declare column names and dataframe for storing stock sales information
+col_names = ['long_shares', 'short_shares', 'long_worth', 'short_worth']
+stocks_df = pd.DataFrame(columns = col_names)
+
+# Manual variable setters
+#position_df.iloc[:, 0]
+#position_column = 0
+#position_row = 0
+
+# for loop that evaluates the dataset deciding when to buy/sell based
+# upon the prediction labels. 0 is a bad week, 1 is a good week
+try:
+    for position_column in range(0, len(position_df.iloc[0, :])):
+        for position_row in range(0, len(position_df)):
+            
+            # Buy section
+            # long_shares buy should occur if position dataframe  
+            # contains a 1 and there are no long_shares held
+            if (position_df.iloc[position_row, position_column] == 1 
+            and long_shares == 0): 
+                long_shares = 100.00 / df_2017.loc[position_row, 'open']           
+            
+            # short_share buy should occur if position dataframe  
+            # contains a -1 and there are no short_shares held
+            if (position_df.iloc[position_row, position_column] == -1
+            and short_shares == 0):
+                short_shares = 100.00 / df_2017.loc[position_row, 'open']     
+            
+            # Sell section
+            # long_shares sell should occur if position dataframe  
+            # contains a -1 and there are long_shares held
+            if (position_df.iloc[position_row, position_column] == -1
+            and long_shares != 0): 
+                long_worth = long_shares * df_2017.loc[position_row, 'adj_close']   
+                long_shares = 0
+                
+            # short_shares sell should occur if position dataframe  
+            # contains a 1 and there are short_shares held
+            if (position_df.iloc[position_row, position_column] == 1
+            and short_shares != 0): 
+                short_worth = short_shares * df_2017.loc[position_row, 'adj_close']  
+                short_shares = 0
+                
+            # On each loop iteration record the current position long/short
+            # stocks held and the profits made from their sales
+            stocks_df.at[position_row, 'long_shares']  = long_shares
+            stocks_df.at[position_row, 'short_shares'] = short_shares
+            stocks_df.at[position_row, 'long_worth']   = long_worth
+            stocks_df.at[position_row, 'short_worth']  = short_worth
+            
+            # Manual increments
+            #position_column += 1
+            #position_row += 1
 
 
-position_df.iloc[:, 0]
+
+sum(stocks_df.iloc[:, 2]) / 251
+sum(stocks_df.iloc[:, 3]) / 251
 
 
-
+        
+except Exception as e:
+    print(e)
+    sys.exit('Failed to evaluate stock trades for 2017')
 
 
 
