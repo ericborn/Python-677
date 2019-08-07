@@ -213,52 +213,96 @@ for column in range(2, len(trade_data_df.iloc[0, :]), 3):
 summary_df = trade_data_df[name_list].copy()
 
 # Sum of profits by window size
-summary_df.sum(axis = 0)
+print(summary_df.sum())
+
+# creates a barplot of the window size vs the sum of profits in dollars
+sns.barplot(window_size, summary_df.sum(), palette = 'Blues_d')
+plt.tight_layout()
+plt.title('Window Size vs. Total Return')
+plt.xlabel('Window Size')
+plt.ylabel('Total Return in Dollars')
+plt.show()
 
 # mean of profits by window size
-summary_df.mean(axis = 0)
+print(summary_df.mean())
 
 # creates a barplot of the window size vs the average return in dollars
-sns.barplot(window_size, summary_df.sum(axis = 0), palette = 'Blues_d')
-ax.xaxis.set_label_position("top")
-plt.tight_layout()
-plt.title('window Size vs. Total Return')
-plt.xlabel('window Size')
-plt.ylabel('Total Return in Dollars')
-
-# creates a barplot of the window size vs the average return in dollars
-sns.barplot(window_size, summary_df.mean(axis = 0), palette = 'Blues_d')
-ax.xaxis.set_label_position("top")
+sns.lineplot(window_size, summary_df.mean(), color = 'navy')
 plt.tight_layout()
 plt.title('Window Size vs. Average Return')
 plt.xlabel('Window Size')
 plt.ylabel('Avg Return in Dollars')
+plt.show()
 
+# creates a barplot of the window size vs the average return in dollars
+sns.lineplot(window_size, summary_df.sum(), color = 'navy')
+plt.tight_layout()
+plt.title('Window Size vs. Total Return')
+plt.xlabel('Window Size')
+plt.ylabel('Total Return in Dollars')
+plt.show()
 
+# Review the number of trades by window size
+print(summary_df.count())
 
-
-
-
- 
-plt.line(window_size, summary_df.mean(axis = 0), color='red')
-
-
+# creates a barplot of the number of trades by window size
+sns.barplot(window_size, summary_df.count(), palette = 'Blues_d')
+plt.tight_layout()
+plt.title('Window Size vs. Number of Trades')
+plt.xlabel('Window Size')
+plt.ylabel('Total Number of Trades')
 plt.show()
 
 
+###### Part 2
+
+# set window_end equal to window - 1 due to zero index
+    window_start = 0
+    window_end = window - 1
+    
+    # loop that handles gathering the adj_close and close price 
+    # for the appropriate window size
+    for k in range(0, len(df_2017)):
+        adj_close = np.array(df_2017.loc[window_start:window_end,
+                                 'adj_close']).reshape(-1, 1)
+        close = np.array(df_2017.loc[window_start:window_end,
+                                 'close']).reshape(-1, 1)
+        lm.fit(adj_close, close)
+        
+        # Breaks on the last row since it cannot predict w + 1 if 
+        # there is no data for the next day, else it creates
+        # a prediction.
+        if window_end == len(df_2017) - 1:
+            break
+        else:
+            pred = lm.predict(np.array(df_2017.loc[window_end + 1, 
+                                      'adj_close']).reshape(-1, 1))
+        # updates the position column with a 1 when prediciton for tomorrows
+        # close price (w + 1) is greater than the close price of w.
+        # Else it marks it with a -1 to indicate a lower price.
+        if float(pred) > df_2017.loc[window_end, 'close']:
+            df_2017.loc[window_end, 'position'] = 1
+        elif float(pred) == df_2017.loc[window_end, 'close']:
+            df_2017.loc[window_end, 'position'] = 0
+        else:
+            df_2017.loc[window_end, 'position'] = -1
+        window_start += 1
+        window_end += 1
+    
+    # writes the position column to a the position dataframe after each
+    # window iteration
+    position_df[str(window)] = df_2017.loc[:, 'position']
 
 
+def estimate_coef (x, y):
+    n = np.size (x)
+    mu_x, mu_y = np.mean(x), np.mean(y)
+    SS_xy = np.sum(y * x) - n * mu_y * mu_x
+    SS_xx = np.sum(x * x) - n * mu_x * mu_x
+    slope = SS_xy / SS_xx
+    intercept = mu_y - slope * mu_x
+    return (slope, intercept)
 
-
-    
-    summary_df.at[trade_data_df.iloc[:, column], trade_data_df.iloc[:, column].name] = 
-    
-    
-    
-    
-    print(round(trade_data_df.iloc[:, column], 2))
-    print(round(np.mean(trade_data_df.iloc[, column]), 2))
-    #print(round(sum(trade_data_df.iloc[:, column]), 2))
 
 
 '''
@@ -274,14 +318,7 @@ except Exception as e:
 
 
 
-def estimate_coef (x, y):
-    n = np.size (x)
-    mu_x, mu_y = np.mean(x), np.mean(y)
-    SS_xy = np.sum(y * x) - n * mu_y * mu_x
-    SS_xx = np.sum(x * x) - n * mu_x * mu_x
-    slope = SS_xy / SS_xx
-    intercept = mu_y - slope * mu_x
-    return (slope, intercept)
+
 
 def plot_regression (x, y, slope, intercept):
     plt.scatter (x, y, color = 'blue',
