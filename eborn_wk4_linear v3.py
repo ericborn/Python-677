@@ -102,20 +102,23 @@ for window in range(5,31):
     position_df[str(window)] = df_2017.loc[:, 'position']
     
 # Initialize wallet and shares to track current money and number of shares.
-wallet = 100.00
+#wallet = 100.00
 long_shares = 0
-short_shares = 0
 long_worth = 0
+long_price = 0
+short_shares = 0
 short_worth = 0
+short_price = 0
 
 # Declare column names and dataframe for storing stock sales information
-col_names = ['long_shares', 'short_shares', 'long_worth', 'short_worth']
+col_names = ['long_price','long_shares', 'long_worth', 'short_price', 
+             'short_shares', 'short_worth']
 stocks_df = pd.DataFrame(columns = col_names)
 
 # Manual variable setters
 #position_df.iloc[:, 0]
-#position_column = 0
-#position_row = 0
+position_column = 0
+position_row = 4
 
 # for loop that evaluates the dataset deciding when to buy/sell based
 # upon the prediction labels. 0 is a bad week, 1 is a good week
@@ -128,43 +131,54 @@ try:
             # contains a 1 and there are no long_shares held
             if (position_df.iloc[position_row, position_column] == 1 
             and long_shares == 0): 
-                long_shares = 100.00 / df_2017.loc[position_row, 'open']           
-            
+                long_shares = 100.00 / df_2017.loc[position_row, 'close']           
+                long_price = df_2017.loc[position_row, 'close']
+                long_worth = 0
+           
             # short_share buy should occur if position dataframe  
             # contains a -1 and there are no short_shares held
             if (position_df.iloc[position_row, position_column] == -1
             and short_shares == 0):
-                short_shares = 100.00 / df_2017.loc[position_row, 'open']     
+                short_shares = 100.00 / df_2017.loc[position_row, 'close']   
+                short_price = df_2017.loc[position_row, 'close']
+                short_worth = 0
             
             # Sell section
             # long_shares sell should occur if position dataframe  
             # contains a -1 and there are long_shares held
             if (position_df.iloc[position_row, position_column] == -1
             and long_shares != 0): 
-                long_worth = long_shares * df_2017.loc[position_row, 'adj_close']   
+                long_worth = ((long_shares 
+                              * df_2017.loc[position_row, 'close'])
+                              - long_price)
                 long_shares = 0
+                long_price = 0
                 
             # short_shares sell should occur if position dataframe  
             # contains a 1 and there are short_shares held
             if (position_df.iloc[position_row, position_column] == 1
             and short_shares != 0): 
-                short_worth = short_shares * df_2017.loc[position_row, 'adj_close']  
+                short_worth = ((short_shares 
+                              * df_2017.loc[position_row, 'close'])
+                              - short_price)
                 short_shares = 0
+                short_price = 0
                 
             # On each loop iteration record the current position long/short
             # stocks held and the profits made from their sales
             stocks_df.at[position_row, 'long_shares']  = long_shares
-            stocks_df.at[position_row, 'short_shares'] = short_shares
             stocks_df.at[position_row, 'long_worth']   = long_worth
+            stocks_df.at[position_row, 'long_price']   = long_price
+            stocks_df.at[position_row, 'short_shares'] = short_shares
             stocks_df.at[position_row, 'short_worth']  = short_worth
+            stocks_df.at[position_row, 'short_price']  = short_price
             
             # Manual increments
             #position_column += 1
-            #position_row += 1
+            position_row += 1
 
 
-
-sum(stocks_df.iloc[:, 2]) / 251
+print(sum(stocks_df.iloc[:, 2]) / 251
 sum(stocks_df.iloc[:, 3]) / 251
 
 
@@ -268,81 +282,4 @@ plt.xlabel('returns')
 plt.ylabel('predicted returns')
 plt.title('Real vs. Predicted returns')
 plt.show()
-
-
-
-
-# 5)
-# Implemented trading strategy based upon label predicitons vs
-# buy and hold strategy
-
-# Initialize wallet and shares to track current money and number of shares.
-wallet = 100.00
-shares = 0
-worth = 0
-
-# stores adj_close values for the last day of each trading week
-adj_close = df_2018.groupby('td_week_number')['adj_close'].last()
-
-# stores open price for the first day of each trading week
-open_price = df_2018.groupby('td_week_number')['open'].first()
-
-# for loop that evaluates the dataset deciding when to buy/sell based
-# upon the prediction labels. 0 is a bad week, 1 is a good week
-try:
-    for i in range(0, len(pred_2018)):
-        # Sell should occur on the last day of a green week at 
-        # the adjusted_close price. Since i is tracking the current
-        # trading week we need to minus 1 to get the adjusted close price
-        # from the previous trading week
-        if pred_2018[i] == 0 and shares > 0:
-            wallet = round(shares * adj_close[i - 1], 2)
-            shares = 0
-            
-        # Buy should occur on the first day of a green week at the open price
-        if pred_2018[i] == 1 and shares == 0: 
-            shares = wallet / open_price[i]
-            wallet = 0            
-            
-except Exception as e:
-    print(e)
-    print('Failed to evaluate df_2018 labels')
-
-
-# set worth by multiplying stock price on final day by total shares
-worth = round(shares * adj_close[52], 2)
-
-if worth == 0:
-    worth = wallet
-    profit = round(wallet - 100.00, 2)
-else:
-    profit = round(worth - 100.00, 2)
-
-# Total Cash: $0
-# Total shares: 6.703067 
-# Worth: $236.89
-# This method would close the year at $ 141.7 a profit of $ 41.7
-print('\n2018 Label Strategy:')
-print('Total Cash: $', wallet, '\nTotal shares:', round(shares, 6),
-      '\nWorth: $', worth)    
-print('This method would close the year at $', worth, 'a profit of $', profit)
-
-# Buy and hold
-# Initialize wallet and shares to track current money and number of shares.
-wallet = 100.00
-shares = 0
-profit = 0
-worth = 0
-
-# Calculate shares, worth and profit
-shares = round(wallet / float(open_price[0]), 6)
-worth = round(shares * adj_close[52], 2)
-profit = round(worth - 100.00, 2)
-
-#Currently own 4.009623 shares 
-#Worth $ 141.70
-#Selling on the final day would result in $ 141.7 a profit of $ 41.7
-print('\n2018 buy and hold:','\nCurrently own', shares, 'shares',
-      '\nWorth','$',"%.2f"%round(worth, 2))
-print('Selling on the final day would result in $',"%.2f"%worth, 'a profit of $', "%.2f"%profit)
 
