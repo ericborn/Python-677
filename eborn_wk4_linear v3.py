@@ -86,12 +86,13 @@ for window in range(5,31):
         else:
             pred = lm.predict(np.array(df_2017.loc[window_end + 1, 
                                       'adj_close']).reshape(-1, 1))
-        
         # updates the position column with a 1 when prediciton for tomorrows
         # close price (w + 1) is greater than the close price of w.
         # Else it marks it with a -1 to indicate a lower price.
-        if float(pred) >= df_2017.loc[window_end, 'close']:
+        if float(pred) > df_2017.loc[window_end, 'close']:
             df_2017.loc[window_end, 'position'] = 1
+        elif float(pred) == df_2017.loc[window_end, 'close']:
+            df_2017.loc[window_end, 'position'] = 0
         else:
             df_2017.loc[window_end, 'position'] = -1
         window_start += 1
@@ -110,9 +111,11 @@ short_shares = 0
 short_worth = 0
 short_price = 0
 
+stocks_df = 0
+
 # Declare column names and dataframe for storing stock sales information
-col_names = ['long_price','long_shares', 'long_worth', 'short_price', 
-             'short_shares', 'short_worth']
+col_names = ['long_price','long_shares', 'long_worth']
+#             , 'short_price', 'short_shares', 'short_worth']
 stocks_df = pd.DataFrame(columns = col_names)
 
 # Manual variable setters
@@ -133,15 +136,21 @@ try:
             and long_shares == 0): 
                 long_shares = 100.00 / df_2017.loc[position_row, 'close']           
                 long_price = df_2017.loc[position_row, 'close']
-                long_worth = 0
-           
+                stocks_df.at[position_row, 'long_price'] = long_price
+                stocks_df.at[position_row, 'long_worth'] = ((long_shares 
+                              * df_2017.loc[position_row, 'close'])
+                              - long_price * long_shares)
+            else:
+               long_price = df_2017.loc[position_row, 'close']
+               
             # short_share buy should occur if position dataframe  
             # contains a -1 and there are no short_shares held
-            if (position_df.iloc[position_row, position_column] == -1
-            and short_shares == 0):
-                short_shares = 100.00 / df_2017.loc[position_row, 'close']   
-                short_price = df_2017.loc[position_row, 'close']
-                short_worth = 0
+#            if (position_df.iloc[position_row, position_column] == -1
+#            and short_shares = 0):
+#                short_shares = 100.00 / df_2017.loc[position_row, 'close']   
+#                short_price = df_2017.loc[position_row, 'close']
+#                stocks_df.at[position_row, 'short_price']  = short_price
+#                short_worth = 0
             
             # Sell section
             # long_shares sell should occur if position dataframe  
@@ -150,28 +159,31 @@ try:
             and long_shares != 0): 
                 long_worth = ((long_shares 
                               * df_2017.loc[position_row, 'close'])
-                              - long_price)
+                              - long_price * long_shares)
+                stocks_df.at[position_row, 'long_worth'] = round(long_worth, 2)
                 long_shares = 0
                 long_price = 0
+                long_worth = 0
                 
             # short_shares sell should occur if position dataframe  
             # contains a 1 and there are short_shares held
-            if (position_df.iloc[position_row, position_column] == 1
-            and short_shares != 0): 
-                short_worth = ((short_shares 
-                              * df_2017.loc[position_row, 'close'])
-                              - short_price)
-                short_shares = 0
-                short_price = 0
+#            if (position_df.iloc[position_row, position_column] == 1
+#            and short_shares != 0): 
+#                short_worth = ((short_shares 
+#                              * df_2017.loc[position_row, 'close'])
+#                              - short_price * short_shares)
+#                stocks_df.at[position_row, 'short_worth']  = round(short_worth, 2)
+#                short_shares = 0
+#                short_price = 0
+#                short_worth = 0
                 
             # On each loop iteration record the current position long/short
             # stocks held and the profits made from their sales
             stocks_df.at[position_row, 'long_shares']  = long_shares
-            stocks_df.at[position_row, 'long_worth']   = long_worth
-            stocks_df.at[position_row, 'long_price']   = long_price
-            stocks_df.at[position_row, 'short_shares'] = short_shares
-            stocks_df.at[position_row, 'short_worth']  = short_worth
-            stocks_df.at[position_row, 'short_price']  = short_price
+            
+#            stocks_df.at[position_row, 'short_shares'] = short_shares
+            
+            
             
             # Manual increments
             #position_column += 1

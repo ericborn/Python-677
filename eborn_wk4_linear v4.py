@@ -53,6 +53,22 @@ lm = LinearRegression()
 # stores the position 0, 1, -1 for each window size
 position_df  = pd.DataFrame()
 
+# list that contains the window sizes
+window_size = []
+
+# 1)
+# This section of code calculates the regression for each day incrementing
+# through a window size from 5 to 30 days.
+# If the predicted close price for w+1 is greater than the close price for w,
+# a 1 is put into the position column in the df_2017 dataframe.
+
+# If the predicted close price for w+1 is less than the close price for w
+# a -1 is put into the position column in the df_2017 dataframe.
+
+# If the predicted close price for w+1 is equal to the close price for w
+# a 0 is put into the position column in the df_2017 dataframe.
+
+
 # window = number of days to evalute before making a prediction values 5-30
 # adj_close price is used to train the regression model
 # close price is being predicted
@@ -64,6 +80,9 @@ for window in range(5,31):
     # Create position column to indicate whether its a buy or sell day.
     # column is reset to all 0's at the start of each loop iteration
     df_2017['position'] = 0
+    
+    # window size list populated with size increments
+    window_size.append(window)
     
     # set window_end equal to window - 1 due to zero index
     window_start = 0
@@ -102,22 +121,18 @@ for window in range(5,31):
     # window iteration
     position_df[str(window)] = df_2017.loc[:, 'position']
     
-# Initialize wallet and shares to track current money and number of shares.
+# Initialize variables and trade_data_df to their starting values
+# before they are utilized in the loop to build out the trade_data df
 long_shares = 0
 long_worth = 0
 long_price = 0
-name_increment   = 5
+name_increment = 5
+trade_data_df = pd.DataFrame()
 
-trade_data = 0
-
-# Declare column names and dataframe for storing stock sales information
-#col_names = ['long_price','long_shares', 'long_worth']
-trade_data = pd.DataFrame()
-
-# Manual variable setters
+# Manual variable setters for testing
 #position_df.iloc[:, 0]
-position_column = 0
-position_row = 4
+#position_column = 0
+#position_row = 4
 
 # for loop that evaluates the dataset deciding when to buy/sell based
 # upon the prediction labels. 0 is a bad week, 1 is a good week
@@ -136,10 +151,10 @@ try:
             and long_shares == 0): 
                 long_shares = 100.00 / df_2017.loc[position_row, 'close']           
                 long_price = df_2017.loc[position_row, 'close']
-                trade_data.at[position_row, long_price_name] = long_price
-                trade_data.at[position_row, long_worth_name] = ((long_shares 
-                              * df_2017.loc[position_row, 'close'])
-                              - long_price * long_shares)
+                trade_data_df.at[position_row, long_price_name] = long_price
+                #trade_data_df.at[position_row, long_worth_name] = ((long_shares 
+                #              * df_2017.loc[position_row, 'close'])
+                #              - long_price * long_shares)
             
             # Sell section
             # long_shares sell should occur if position dataframe  
@@ -149,51 +164,102 @@ try:
                 long_worth = ((long_shares 
                               * df_2017.loc[position_row, 'close'])
                               - long_price * long_shares)
-                trade_data.at[position_row, long_worth_name] = (
+                trade_data_df.at[position_row, long_worth_name] = (
                                                           round(long_worth, 2))
-                trade_data.at[position_row, long_price_name] = (
+                trade_data_df.at[position_row, long_price_name] = (
                                             df_2017.loc[position_row, 'close'])
                 long_shares = 0
                 long_price = 0
                 long_worth = 0
-            
-            
-            # Used to set values when holding a long position or two short
-            # days happen in a row since we aren't buying or selling
-            if (position_df.iloc[position_row, position_column] == 1
-            and long_shares != 0): 
-                trade_data.at[position_row, long_price_name] = (
-                                            df_2017.loc[position_row, 'close'])
-                trade_data.at[position_row, long_worth_name] = ((long_shares 
-                              * df_2017.loc[position_row, 'close'])
-                              - long_price * long_shares)
-            
-            if (position_df.iloc[position_row, position_column] == -1
-            and long_shares == 0): 
-                trade_data.at[position_row, long_price_name] = (
-                                            df_2017.loc[position_row, 'close'])
-                trade_data.at[position_row, long_worth_name] = ((long_shares 
-                              * df_2017.loc[position_row, 'close'])
-                              - long_price * long_shares)    
                   
-            # On each loop iteration record the current position long
-            # stocks held
-            trade_data.at[position_row, long_shares_name]  = long_shares
+            # On each loop iteration record the current long shares held
+            trade_data_df.at[position_row, long_shares_name]  = long_shares
        
+            # Manual increments for testing
+            #position_column += 1
+            #position_row += 1
+
         # increments the name_increment to represent the window size
         name_increment += 1
-        
-        # Manual increments
-        #position_column += 1
-        #position_row += 1
+            
 except Exception as e:
     print(e)
     sys.exit('failed to build trading data for trade_data')            
 
+# NaN are excluded when using the mean function so I decided to leave them in
 # Replace all NaN with 0's
-trade_data = trade_data.fillna(0)            
-  
-trade_data.to_csv(r'C:\Users\TomBrody\Desktop\School\677\wk4\trade_data.csv', index = False)
+#trade_data_df = trade_data_df.fillna(0)            
+
+# export trade data to CSV
+#try:  
+#    trade_data_df.to_csv(r'C:\Users\TomBrody\Desktop\School\677\wk4\trade_data.csv', index = False)
+#
+#except Exception as e:
+#    print(e)
+#    sys.exit('failed to export trade_data_df to csv')     
+
+# sample data selections
+#trade_data_df.iloc[0:10, 0:3]
+#trade_data_df.iloc[0:10, 77]
+#trade_data_df.iloc[0:3, 2]
+#trade_data_df.iloc[:, column]
+
+# creates a list containing the column names from the trade_data_df
+name_list = []
+for column in range(2, len(trade_data_df.iloc[0, :]), 3):
+    name_list.append(trade_data_df.iloc[:, column].name)
+
+# create a dataframe to store the daily profits made from selling stocks
+summary_df = trade_data_df[name_list].copy()
+
+# Sum of profits by window size
+summary_df.sum(axis = 0)
+
+# mean of profits by window size
+summary_df.mean(axis = 0)
+
+# creates a barplot of the window size vs the average return in dollars
+sns.barplot(window_size, summary_df.sum(axis = 0), palette = 'Blues_d')
+ax.xaxis.set_label_position("top")
+plt.tight_layout()
+plt.title('window Size vs. Total Return')
+plt.xlabel('window Size')
+plt.ylabel('Total Return in Dollars')
+
+# creates a barplot of the window size vs the average return in dollars
+sns.barplot(window_size, summary_df.mean(axis = 0), palette = 'Blues_d')
+ax.xaxis.set_label_position("top")
+plt.tight_layout()
+plt.title('Window Size vs. Average Return')
+plt.xlabel('Window Size')
+plt.ylabel('Avg Return in Dollars')
+
+
+
+
+
+
+ 
+plt.line(window_size, summary_df.mean(axis = 0), color='red')
+
+
+plt.show()
+
+
+
+
+
+
+    
+    summary_df.at[trade_data_df.iloc[:, column], trade_data_df.iloc[:, column].name] = 
+    
+    
+    
+    
+    print(round(trade_data_df.iloc[:, column], 2))
+    print(round(np.mean(trade_data_df.iloc[, column]), 2))
+    #print(round(sum(trade_data_df.iloc[:, column]), 2))
+
 
 '''
 print(sum(stocks_df.iloc[:, 2]) / 251
