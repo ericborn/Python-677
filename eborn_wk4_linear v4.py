@@ -266,7 +266,8 @@ plt.ylabel('Total Return in Dollars')
 plt.show()
 
 # Review the number of trades by window size
-print(summary_2017_df.count())
+trades_2017 = summary_2017_df.count()
+print(trades_2017)
 
 # creates a barplot of the number of trades by window size
 sns.barplot(window_size, summary_2017_df.count(), palette = 'Blues_d')
@@ -450,7 +451,7 @@ plt.show()
 profit_2018 = summary_2018_df.sum()
 print(profit_2018)
 
-# Plot long vs short day totals
+# Plot total profits 2017 vs 2018
 profit_data = pd.DataFrame({'Year': ['2017', '2018'], 
                             'Profit': [int(profit_2017[0]), int(profit_2018)]})
 sns.barplot(x = 'Year', y = 'Profit', data = profit_data) 
@@ -459,10 +460,28 @@ plt.xlabel('Year')
 plt.ylabel('Total Profit in Dollars')
 plt.show()
 
-# mean of profits by window size
-print(summary_2018_df.mean())
+# mean of profits
+mean_2018 = round(summary_2018_df.mean(), 2)
+print(mean_2018)
+
+# Plot mean trade amount 2017 vs 2018
+mean_data = pd.DataFrame({'Year': ['2017', '2018'], 
+                            'Average': [float(mean_2017[0]), float(mean_2018)]})
+sns.barplot(x = 'Year', y = 'Average', data = mean_data) 
+plt.title('Average Profit 2017 vs. 2018')
+plt.xlabel('Year')
+plt.ylabel('Average Profit in Dollars')
+plt.show()
 
 # Review the number of trades by window size
-print(summary_2018_df.count())
+trades_2018 = summary_2018_df.count()
+print(trades_2018)
 
-
+# Plot total number of trades 2017 vs 2018
+trade_data = pd.DataFrame({'Year': ['2017', '2018'], 
+                            'Trades': [int(trades_2017[0]), int(trades_2018)]})
+sns.barplot(x = 'Year', y = 'Trades', data = trade_data) 
+plt.title('Total Trades 2017 vs. 2018')
+plt.xlabel('Year')
+plt.ylabel('Total Number of Trades')
+plt.show()
