@@ -15,12 +15,11 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from sklearn import tree
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import confusion_matrix, recall_score
 
 # setup input directory and filename
 ticker = 'BSX-labeled'
-input_dir = r'C:\Users\TomBrody\Desktop\School\677\wk5\decision'
+input_dir = r'C:\Users\TomBrody\Desktop\School\677\wk5'
 ticker_file = os.path.join(input_dir, ticker + '.csv')
 
 # read csv file into dataframe
@@ -85,11 +84,11 @@ tree_clf = tree_clf.fit(x_train_2017, y_train_2017)
 prediction = tree_clf.predict(x_test_2018)
 
 # calculate error rate
-error_rate = 100-(round(np.mean(prediction != y_test_2018) * 100, 2))
+accuracy_rate = 100-(round(np.mean(prediction != y_test_2018) * 100, 2))
 
 # 1)
 # Print error rate
-print('The decision tree classifier has an accuracy of', error_rate,'%')
+print('The decision tree classifier has an accuracy of', accuracy_rate,'%')
 
 # 2)
 # Output the confusion matrix
@@ -157,8 +156,7 @@ try:
             
 except Exception as e:
     print(e)
-    print('Failed to evaluate df_2018 labels')
-
+    exit('Failed to evaluate df_2018 labels')
 
 # set worth by multiplying stock price on final day by total shares
 worth = round(shares * adj_close[52], 2)
