@@ -80,11 +80,13 @@ y_test_2018 = bsx_2018_reduced['label'].values
 pred_list = []
 
 # Create a random forest classifier that trains and predicts labels
-# using from 1 to 10 trees and from 1 to 5 depth of each tree
+# using from 1 to 10 trees and from 1 to 5 depth of each tree\
+# set random state to 1337 for repeatability
 for trees in range(1, 11):
     for depth in range(1, 6):
         rf_clf = RandomForestClassifier(n_estimators = trees, 
-                                    max_depth = depth, criterion ='entropy')
+                                    max_depth = depth, criterion ='entropy',
+                                    random_state = 1337)
         rf_clf.fit(x_train_2017, y_train_2017)
         pred_list.append([trees, depth, 
                     round(np.mean(rf_clf.predict(x_test_2018) != y_test_2018) 
@@ -95,17 +97,36 @@ forest_df = pd.DataFrame(pred_list, columns = ['estimators', 'depth', 'error_rat
 
 # Plot the classifier data
 sns.lineplot(x='estimators', y='error_rate', hue='depth', data=forest_df, palette="tab10",
-             legend='full')
+             legend='full', ci = None)
+plt.title('Random Forest error rates for stock data')
+plt.ylabel('Error Rate')
+plt.xlabel('Estimators')
+plt.show()
 
 # 1)
 # Print error rate
-print('The decision tree classifier has an accuracy of', accuracy_rate,'%')
+print(forest_df.loc[forest_df['error_rate'] == min(forest_df.error_rate)])
 
 # 2)
-# Output the confusion matrix
-cm = confusion_matrix(y_test_2018, prediction)
-print('\nConfusion matrix for year 2 predictions:')
-print(cm, '\n')
+# predictions with 4 trees
+rf_clf_one = RandomForestClassifier(n_estimators = 1, 
+                                    max_depth = 4, criterion ='entropy',
+                                    random_state = 1337)
+rf_clf_one.fit(x_train_2017, y_train_2017)
+pred_one = rf_clf_one.predict(x_test_2018)
+print(round(np.mean(pred_one != y_test_2018)* 100, 2))
+
+# predictions with 5 trees
+rf_clf_two = RandomForestClassifier(n_estimators = 2, 
+                                    max_depth = 4, criterion ='entropy',
+                                    random_state = 1337)
+rf_clf_two.fit(x_train_2017, y_train_2017)
+pred_two = rf_clf_two.predict(x_test_2018)
+
+# confusion matrix with 1 tree
+cm_one = confusion_matrix(y_test_2018, pred_one)
+print('\nConfusion matrix with four trees year 2 predictions:')
+print(cm_one, '\n')
 
 # Create confusion matrix heatmap
 # setup class names and tick marks
@@ -116,20 +137,42 @@ plt.xticks(tick_marks, class_names)
 plt.yticks(tick_marks, class_names)
 
 # Create heatmap and labels
-sns.heatmap(pd.DataFrame(cm), annot=True, cmap="summer" ,fmt='g')
+sns.heatmap(pd.DataFrame(cm_one), annot=True, cmap="summer" ,fmt='g')
 ax.xaxis.set_label_position("top")
 plt.tight_layout()
-plt.title('Confusion matrix', y=1.1)
+plt.title('Confusion matrix one tree', y=1.1)
 plt.ylabel('Actual label')
 plt.xlabel('Predicted label')
 
+# confusion matrix with 2 trees
+cm_two = confusion_matrix(y_test_2018, pred_two)
+print('\nConfusion matrix with one tree and depth of four year 2 predictions:')
+print(cm_two, '\n')
+
+# Create confusion matrix heatmap
+# setup class names and tick marks
+class_names=[0,1]
+fig, ax = plt.subplots()
+tick_marks = np.arange(len(class_names))
+plt.xticks(tick_marks, class_names)
+plt.yticks(tick_marks, class_names)
+
+# Create heatmap and labels
+sns.heatmap(pd.DataFrame(cm_two), annot=True, cmap="PuOr" ,fmt='g')
+ax.xaxis.set_label_position("top")
+plt.tight_layout()
+plt.title('Confusion matrix two trees', y=1.1)
+plt.ylabel('Actual label')
+plt.xlabel('Predicted label')
+
+
 # 3)
 # store confusion matrix figures
-tn, fp, fn, tp = confusion_matrix(y_test_2018, prediction).ravel()
+tn, fp, fn, tp = confusion_matrix(y_test_2018, pred_one).ravel()
 
 # TPR/TNR rates
 print('The TPR is:', str(tp) + '/' + str(tp + fn) + ',',
-      round(recall_score(y_test_2018, prediction) * 100, 2),'%')
+      round(recall_score(y_test_2018, pred_one) * 100, 2),'%')
 print('The TNR is:', str(tn) + '/' + str(tn + fp) + ',',
     round(tn / (tn + fp) * 100, 2),'%')
 
@@ -151,17 +194,17 @@ open_price = bsx_df_2018.groupby('td_week_number')['open'].first()
 # for loop that evaluates the dataset deciding when to buy/sell based
 # upon the prediction labels. 0 is a bad week, 1 is a good week
 try:
-    for day in range(0, len(prediction)):
+    for day in range(0, len(pred_one)):
         # Sell should occur on the last day of a green week at 
         # the adjusted_close price. Since i is tracking the current
         # trading week we need to minus 1 to get the adjusted close price
         # from the previous trading week
-        if prediction[day] == 0 and shares > 0:
+        if pred_one[day] == 0 and shares > 0:
             wallet = round(shares * adj_close[day - 1], 2)
             shares = 0
             
         # Buy should occur on the first day of a green week at the open price
-        if prediction[day] == 1 and shares == 0: 
+        if pred_one[day] == 1 and shares == 0: 
             shares = wallet / open_price[day]
             wallet = 0            
             
