@@ -427,17 +427,17 @@ ols_df_accuracy_rate = 100-(round(np.mean(ols_df_prediction
 ####
 
 ####
-# Start ols_df
+# Start rfe_df
 ####
 
 # Create a decisions tree classifier
 rfe_df_tree_clf = tree.DecisionTreeClassifier(criterion = 'entropy')
 
-# Train the classifier on ols attributes
+# Train the classifier on rfe attributes
 rfe_df_tree_clf = rfe_df_tree_clf.fit(rfe_df_train_x, 
                                             rfe_df_train_y)
 
-# Predict on ols attributes
+# Predict on rfe attributes
 rfe_df_prediction = rfe_df_tree_clf.predict(rfe_df_test_x)
 
 # calculate error rate
@@ -445,7 +445,29 @@ rfe_df_accuracy_rate = 100-(round(np.mean(rfe_df_prediction
                                              != rfe_df_test_y) * 100, 2))
 
 ####
-# End ols_df
+# End rfe_df
+####
+
+####
+# Start lasso_df
+####
+
+# Create a decisions tree classifier
+lasso_df_tree_clf = tree.DecisionTreeClassifier(criterion = 'entropy')
+
+# Train the classifier on lasso attributes
+lasso_df_tree_clf = lasso_df_tree_clf.fit(lasso_df_train_x, 
+                                            lasso_df_train_y)
+
+# Predict on lasso attributes
+lasso_df_prediction = lasso_df_tree_clf.predict(lasso_df_test_x)
+
+# calculate error rate
+lasso_df_accuracy_rate = 100-(round(np.mean(lasso_df_prediction 
+                                             != lasso_df_test_y) * 100, 2))
+
+####
+# End lasso_df
 ####
 
 ####
@@ -455,3 +477,4 @@ print('pear_five_accuracy_rate:', pear_five_accuracy_rate)
 print('pear_ten_accuracy_rate:', pear_ten_accuracy_rate)
 print('ols_df_accuracy_rate:', ols_df_accuracy_rate)
 print('rfe_df_accuracy_rate:', rfe_df_accuracy_rate)
+print('lasso_df_accuracy_rate:', lasso_df_accuracy_rate)
