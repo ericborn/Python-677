@@ -13,11 +13,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import statsmodels.api as sm
+from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectKBest
+from sklearn.linear_model import LinearRegression
+from sklearn.feature_selection import RFE
 from sklearn.feature_selection import chi2
 #from sklearn.ensemble import RandomForestClassifier
 #from sklearn.metrics import confusion_matrix, recall_score
-#from sklearn.model_selection import train_test_split
 #from sklearn.model_selection import StratifiedKFold
 
 sns.set_style("darkgrid")
@@ -88,16 +91,15 @@ print('\nTeam win ratios\n','team 1 : team 2\n', str(ratio)+' :   1')
 # 58 columns remaining
 lol_df.head()
 
-
-########
-# Pearsons corerelation
-########
-
 # x stores all columns except for the win column
-pear_x = lol_df.drop('win',1)
+lol_x = lol_df.drop('win',1)
 
 # y stores only the win column since its used as a predictor
-pear_y = lol_df['win']
+lol_y = lol_df['win']
+
+########
+# Start Pearsons corerelation
+########
 
 # create a correlation object
 cor = lol_df.corr()
@@ -144,6 +146,97 @@ pear_ten_df = lol_df[['firstTower','firstInhibitor', 't1_towerKills',
                        't2_towerKills', 't2_inhibitorKills', 't2_baronKills',
                        't2_dragonKills', 'win']]
 
+########
+# End Pearsons corerelation
+########
+
+########
+# Start Ordinary Least Squares
+########
+
+# creates a list of column names
+cols = list(lol_x.columns)
+# sets a max value
+pmax = 1
+
+# while loop that calculates the p values of each attribute using the 
+# OLS model and eliminiates the highest value from the list of columns
+# loop breaks if all columns remaining have less than 0.05 p value
+# or all columns are removed
+while (len(cols)>0):
+    p = []
+    ols_x1 = lol_x[cols]
+    ols_x1 = sm.add_constant(ols_x1)
+    model = sm.OLS(lol_y,ols_x1).fit()
+    p = pd.Series(model.pvalues.values[1:],index = cols)      
+    pmax = max(p)
+    feature_with_p_max = p.idxmax()
+    if(pmax>0.05):
+        cols.remove(feature_with_p_max)
+    else:
+        break
+
+# sets and prints the remaining unremoved features
+selected_features_BE = cols
+print(selected_features_BE)
+
+# creates a dataframe with the ols selected columns
+ols_df = lol_df[selected_features_BE]
+
+########
+# End Ordinary Least Squares
+########
+
+########
+# Start Recursive Feature Elimination
+########
+
+# Total number of features
+nof_list = np.arange(1,58)            
+high_score = 0
+
+# Variable to store the optimum features
+nof = 0           
+score_list = []
+for n in range(len(nof_list)):
+    X_train, X_test, y_train, y_test = train_test_split(lol_x, lol_y, 
+                                            test_size = 0.3, random_state = 0)
+    model = LinearRegression()
+    rfe = RFE(model,nof_list[n])
+    X_train_rfe = rfe.fit_transform(X_train,y_train)
+    X_test_rfe = rfe.transform(X_test)
+    model.fit(X_train_rfe,y_train)
+    score = model.score(X_test_rfe,y_test)
+    score_list.append(score)
+    if(score > high_score):
+        high_score = score
+        nof = nof_list[n]
+
+# 39 features score of 0.793475
+print("Optimum number of features: %d" %nof)
+print("Score with %d features: %f" % (nof, high_score))
+
+# setup column list and regression model
+cols = list(lol_x.columns)
+model = LinearRegression()
+
+#Initializing RFE model with 39 features
+rfe = RFE(model, 39)   
+          
+#Transforming data using RFE
+X_rfe = rfe.fit_transform(lol_x,lol_y)  
+
+#Fitting the data to model
+model.fit(X_rfe,lol_y)              
+temp = pd.Series(rfe.support_,index = cols)
+selected_features_rfe = temp[temp==True].index
+
+# output the selected features
+print(selected_features_rfe)
+
+########
+# End Recursive Feature Elimination
+########
 
 #############
 # Chi-squared
