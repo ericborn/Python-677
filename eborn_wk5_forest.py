@@ -80,7 +80,7 @@ y_test_2018 = bsx_2018_reduced['label'].values
 pred_list = []
 
 # Create a random forest classifier that trains and predicts labels
-# using from 1 to 10 trees and from 1 to 5 depth of each tree\
+# using from 1 to 10 trees and from 1 to 5 depth of each tree
 # set random state to 1337 for repeatability
 for trees in range(1, 11):
     for depth in range(1, 6):
@@ -210,7 +210,7 @@ try:
             
 except Exception as e:
     print(e)
-    print('Failed to evaluate df_2018 labels')
+    exit('Failed to evaluate 2018 stock data')
 
 
 # set worth by multiplying stock price on final day by total shares
@@ -227,9 +227,9 @@ else:
 # Worth: $236.89
 # This method would close the year at $ 141.7 a profit of $ 41.7
 print('\n2018 Label Strategy:')
-print('Total Cash: $', wallet, '\nTotal shares:', round(shares, 6),
-      '\nWorth: $', worth)    
-print('This method would close the year at $', worth, 'a profit of $', profit)
+print('Total Cash: $', "%.2f"%wallet, '\nTotal shares:', round(shares, 6),
+      '\nWorth: $', "%.2f"%worth)    
+print('This method would close the year at $', "%.2f"%worth, 'a profit of $', "%.2f"%profit)
 
 # Buy and hold
 # Initialize wallet and shares to track current money and number of shares.
