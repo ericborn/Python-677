@@ -94,10 +94,14 @@ print('\nTeam win ratios\n','team 1 : team 2\n', str(ratio)+' :   1')
 lol_df.head()
 
 # x stores all columns except for the win column
-lol_x = lol_df.drop('win',1)
+lol_x = lol_df.drop('win', 1)
 
 # y stores only the win column since its used as a predictor
 lol_y = lol_df['win']
+
+################
+# Start attribute selection with various methods
+################
 
 ########
 # Start Pearsons corerelation
@@ -296,9 +300,13 @@ lasso_df = lol_df[coef[coef.values != 0].index]
 # End lasso method
 ########
 
-########
-# start test/train builds
-########
+################
+# End attribute selection with various methods
+################
+
+################
+# Start building test/train datasets with various attribute selections
+################
 
 # dataframes with selected attribtues from 5 methods for attribute eliminiation
 pear_five_df
@@ -357,13 +365,17 @@ lasso_df_test_x
 lasso_df_train_y
 lasso_df_test_y
 
-########
-# end test/train builds
-########
+################
+# End building test/train datasets with various attribute selections
+################
 
-#####################
+################
+# Start building algorithms
+################
+
+#######
 # Start decision tree
-#####################
+#######
 
 # Create a decisions tree classifier
 pear_five_tree_clf = tree.DecisionTreeClassifier(criterion = 'entropy')
@@ -483,9 +495,13 @@ print('lasso_df_tree_acc:', lasso_df_tree_acc)
 # End prediction prints
 ####
 
-#####################
+#######
 # End decision tree
-#####################
+#######
+
+#######
+# Start naive bayes
+#######
 
 # Create a naive bayes classifier
 pear_five_gnb_clf = GaussianNB()
@@ -605,9 +621,17 @@ print('lasso_df_gnb_acc:', lasso_df_gnb_acc)
 # End prediction prints
 ####
 
-####
-# Start scaled dataframes
-####
+#######
+# End naive bayes
+#######
+
+################
+# End building algorithms
+################
+
+################
+# Start building scaled dataframes
+################
 
 # Setup scalers X datasets
 scaler = StandardScaler()
@@ -687,6 +711,6 @@ lasso_scaled_df_test_x
 lasso_scaled_df_train_y
 lasso_scaled_df_test_y
 
-####
-# End scaled dataframes
-####
+################
+# End building scaled dataframes
+################
