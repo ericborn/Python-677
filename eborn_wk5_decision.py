@@ -172,9 +172,9 @@ else:
 # Worth: $236.89
 # This method would close the year at $ 141.7 a profit of $ 41.7
 print('\n2018 Label Strategy:')
-print('Total Cash: $', wallet, '\nTotal shares:', round(shares, 6),
-      '\nWorth: $', worth)    
-print('This method would close the year at $', worth, 'a profit of $', profit)
+print('Total Cash: $', "%.2f"%wallet, '\nTotal shares:', round(shares, 6),
+      '\nWorth: $', "%.2f"%worth)    
+print('This method would close the year at $', "%.2f"%worth, 'a profit of $', "%.2f"%profit)
 
 # Buy and hold
 # Initialize wallet and shares to track current money and number of shares.
