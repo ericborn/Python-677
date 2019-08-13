@@ -282,39 +282,10 @@ lasso_df['win'] = lol_df.win
 # End lasso method
 ########
 
+# dataframes with selected attribtues from 5 methods for attribute eliminiation
 pear_five_df
 pear_ten_df
 ols_df
 rfe_df
 lasso_df
 
-
-
-#############
-# Chi-squared
-# store dataframe values into an array for faster computation
-#lol_array = lol_df.values
-#
-## x stores all columns except for the win column
-#chi_x = lol_array[:,0:57]
-#
-## y stores only the win column since its used as a predictor
-#chi_y = lol_array[:,57]
-#
-## implement chi-squared to evaluate feature significance
-## k = 15 is chosing the top 15 attributes
-#chi_test = SelectKBest(score_func = chi2, k = 15)
-#chi_fit = chi_test.fit(chi_x, chi_y)
-#
-## set the precision level
-#np.set_printoptions(precision = 3)
-#
-## creates a new array containing the feature set reduced to the best 15
-#features = chi_fit.transform(chi_x)
-#
-#
-#print(features[0:16,:])
-
-
-# split dataset into 33% test 66% training
-#lol_df_train, lol_df_test = train_test_split
