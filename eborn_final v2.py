@@ -19,10 +19,11 @@ from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import LassoCV
 from sklearn import tree
-#from sklearn.feature_selection import SelectKBest
-#from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
 #from sklearn.metrics import confusion_matrix, recall_score
-#from sklearn.model_selection import StratifiedKFold
+
 
 sns.set_style("darkgrid")
 
@@ -307,7 +308,7 @@ rfe_df
 lasso_df
 
 # pear_five split dataset into 33% test 66% training
-pear_five_df_train_x, pear_five_df_test_x, pear_five_df_train_y, pear_five_df_test_y, = (
+pear_five_df_train_x, pear_five_df_test_x, pear_five_df_train_y, pear_five_df_test_y = (
         train_test_split(pear_five_df, lol_y, test_size = 0.33, 
                          random_state=1337))
 
@@ -317,7 +318,7 @@ pear_five_df_train_y
 pear_five_df_test_y
 
 # pear_ten split dataset into 33% test 66% training
-pear_ten_df_train_x, pear_ten_df_test_x, pear_ten_df_train_y, pear_ten_df_test_y, = (
+pear_ten_df_train_x, pear_ten_df_test_x, pear_ten_df_train_y, pear_ten_df_test_y = (
         train_test_split(pear_ten_df, lol_y, test_size = 0.33, 
                          random_state=1337))
 
@@ -327,7 +328,7 @@ pear_ten_df_train_y
 pear_ten_df_test_y
 
 # ols_df split dataset into 33% test 66% training
-ols_df_train_x, ols_df_test_x, ols_df_train_y, ols_df_test_y, = (
+ols_df_train_x, ols_df_test_x, ols_df_train_y, ols_df_test_y = (
         train_test_split(ols_df, lol_y, test_size = 0.33, 
                          random_state=1337))
 
@@ -337,7 +338,7 @@ ols_df_train_y
 ols_df_test_y
 
 # ols_df split dataset into 33% test 66% training
-rfe_df_train_x, rfe_df_test_x, rfe_df_train_y, rfe_df_test_y, = (
+rfe_df_train_x, rfe_df_test_x, rfe_df_train_y, rfe_df_test_y = (
         train_test_split(rfe_df, lol_y, test_size = 0.33, 
                          random_state=1337))
 
@@ -347,7 +348,7 @@ rfe_df_train_y
 rfe_df_test_y
 
 # ols_df split dataset into 33% test 66% training
-lasso_df_train_x, lasso_df_test_x, lasso_df_train_y, lasso_df_test_y, = (
+lasso_df_train_x, lasso_df_test_x, lasso_df_train_y, lasso_df_test_y = (
         train_test_split(lasso_df, lol_y, test_size = 0.33, 
                          random_state=1337))
 
@@ -360,9 +361,9 @@ lasso_df_test_y
 # end test/train builds
 ########
 
-########
+#####################
 # Start decision tree
-########
+#####################
 
 # Create a decisions tree classifier
 pear_five_tree_clf = tree.DecisionTreeClassifier(criterion = 'entropy')
@@ -375,7 +376,7 @@ pear_five_tree_clf = pear_five_tree_clf.fit(pear_five_df_train_x,
 pear_five_prediction = pear_five_tree_clf.predict(pear_five_df_test_x)
 
 # calculate error rate
-pear_five_accuracy_rate = 100-(round(np.mean(pear_five_prediction 
+pear_five_tree_acc = 100-(round(np.mean(pear_five_prediction 
                                              != pear_five_df_test_y) * 100, 2))
 
 ####
@@ -397,7 +398,7 @@ pear_ten_tree_clf = pear_ten_tree_clf.fit(pear_ten_df_train_x,
 pear_ten_prediction = pear_ten_tree_clf.predict(pear_ten_df_test_x)
 
 # calculate error rate
-pear_ten_accuracy_rate = 100-(round(np.mean(pear_ten_prediction 
+pear_ten_tree_acc = 100-(round(np.mean(pear_ten_prediction 
                                              != pear_ten_df_test_y) * 100, 2))
 
 ####
@@ -419,7 +420,7 @@ ols_df_tree_clf = ols_df_tree_clf.fit(ols_df_train_x,
 ols_df_prediction = ols_df_tree_clf.predict(ols_df_test_x)
 
 # calculate error rate
-ols_df_accuracy_rate = 100-(round(np.mean(ols_df_prediction 
+ols_df_tree_acc= 100-(round(np.mean(ols_df_prediction 
                                              != ols_df_test_y) * 100, 2))
 
 ####
@@ -441,7 +442,7 @@ rfe_df_tree_clf = rfe_df_tree_clf.fit(rfe_df_train_x,
 rfe_df_prediction = rfe_df_tree_clf.predict(rfe_df_test_x)
 
 # calculate error rate
-rfe_df_accuracy_rate = 100-(round(np.mean(rfe_df_prediction 
+rfe_df_tree_acc = 100-(round(np.mean(rfe_df_prediction 
                                              != rfe_df_test_y) * 100, 2))
 
 ####
@@ -463,7 +464,7 @@ lasso_df_tree_clf = lasso_df_tree_clf.fit(lasso_df_train_x,
 lasso_df_prediction = lasso_df_tree_clf.predict(lasso_df_test_x)
 
 # calculate error rate
-lasso_df_accuracy_rate = 100-(round(np.mean(lasso_df_prediction 
+lasso_df_tree_acc = 100-(round(np.mean(lasso_df_prediction 
                                              != lasso_df_test_y) * 100, 2))
 
 ####
@@ -473,8 +474,219 @@ lasso_df_accuracy_rate = 100-(round(np.mean(lasso_df_prediction
 ####
 # Start prediction prints
 ####
-print('pear_five_accuracy_rate:', pear_five_accuracy_rate)
-print('pear_ten_accuracy_rate:', pear_ten_accuracy_rate)
-print('ols_df_accuracy_rate:', ols_df_accuracy_rate)
-print('rfe_df_accuracy_rate:', rfe_df_accuracy_rate)
-print('lasso_df_accuracy_rate:', lasso_df_accuracy_rate)
+print('pear_five_tree_acc:', pear_five_tree_acc)
+print('pear_ten_tree_acc:', pear_ten_tree_acc)
+print('ols_df_tree_acc:', ols_df_tree_acc)
+print('rfe_df_tree_acc:', rfe_df_tree_acc)
+print('lasso_df_tree_acc:', lasso_df_tree_acc)
+####
+# End prediction prints
+####
+
+#####################
+# End decision tree
+#####################
+
+# Create a naive bayes classifier
+pear_five_gnb_clf = GaussianNB()
+
+# Train the classifier on pearsons top 5 attributes
+pear_five_gnb_clf = pear_five_gnb_clf.fit(pear_five_df_train_x, 
+                                            pear_five_df_train_y)
+
+# Predict on pearsons top 5 attributes
+pear_five_prediction = pear_five_gnb_clf.predict(pear_five_df_test_x)
+
+# calculate error rate
+pear_five_gnb_acc = 100-(round(np.mean(pear_five_prediction 
+                                             != pear_five_df_test_y) * 100, 2))
+
+####
+# End five
+####
+
+####
+# Start ten
+####
+
+# Create a naive bayes classifier
+pear_ten_gnb_clf = GaussianNB()
+
+# Train the classifier on pearsons top 10 attributes
+pear_ten_gnb_clf = pear_ten_gnb_clf.fit(pear_ten_df_train_x, 
+                                            pear_ten_df_train_y)
+
+# Predict on pearsons top 10 attributes
+pear_ten_prediction = pear_ten_gnb_clf.predict(pear_ten_df_test_x)
+
+# calculate error rate
+pear_ten_gnb_acc = 100-(round(np.mean(pear_ten_prediction 
+                                             != pear_ten_df_test_y) * 100, 2))
+
+####
+# End ten
+####
+
+####
+# Start ols_df
+####
+
+# Create a naive bayes classifier
+ols_df_gnb_clf = GaussianNB()
+
+# Train the classifier on ols attributes
+ols_df_gnb_clf = ols_df_gnb_clf.fit(ols_df_train_x, 
+                                            ols_df_train_y)
+
+# Predict on ols attributes
+ols_df_prediction = ols_df_gnb_clf.predict(ols_df_test_x)
+
+# calculate error rate
+ols_df_gnb_acc = 100-(round(np.mean(ols_df_prediction 
+                                             != ols_df_test_y) * 100, 2))
+
+####
+# End ols_df
+####
+
+####
+# Start rfe_df
+####
+
+# Create a naive bayes classifier
+rfe_df_gnb_clf = GaussianNB()
+
+# Train the classifier on rfe attributes
+rfe_df_gnb_clf = rfe_df_gnb_clf.fit(rfe_df_train_x, 
+                                            rfe_df_train_y)
+
+# Predict on rfe attributes
+rfe_df_prediction = rfe_df_gnb_clf.predict(rfe_df_test_x)
+
+# calculate error rate
+rfe_df_gnb_acc = 100-(round(np.mean(rfe_df_prediction 
+                                             != rfe_df_test_y) * 100, 2))
+
+####
+# End rfe_df
+####
+
+####
+# Start lasso_df
+####
+
+# Create a naive bayes classifier
+lasso_df_gnb_clf = GaussianNB()
+
+# Train the classifier on lasso attributes
+lasso_df_gnb_clf = lasso_df_gnb_clf.fit(lasso_df_train_x, 
+                                            lasso_df_train_y)
+
+# Predict on lasso attributes
+lasso_df_prediction = lasso_df_gnb_clf.predict(lasso_df_test_x)
+
+# calculate error rate
+lasso_df_gnb_acc = 100-(round(np.mean(lasso_df_prediction 
+                                             != lasso_df_test_y) * 100, 2))
+
+####
+# End lasso_df
+####
+
+####
+# Start prediction prints
+####
+print('pear_five_gnb_acc:', pear_five_gnb_acc)
+print('pear_ten_gnb_acc:', pear_ten_gnb_acc)
+print('ols_df_gnb_acc:', ols_df_gnb_acc)
+print('rfe_df_gnb_acc:', rfe_df_gnb_acc)
+print('lasso_df_gnb_acc:', lasso_df_gnb_acc)
+####
+# End prediction prints
+####
+
+####
+# Start scaled dataframes
+####
+
+# Setup scalers X datasets
+scaler = StandardScaler()
+scaler.fit(pear_five_df)
+pear_five_df_scaled = scaler.transform(pear_five_df)
+
+# pear_five split dataset into 33% test 66% training
+(pear_five_scaled_df_train_x, pear_five_scaled_df_test_x, 
+ pear_five_scaled_df_train_y, pear_five_scaled_df_test_y) = (
+        train_test_split(pear_five_df_scaled, lol_y, test_size = 0.33, 
+                         random_state=1337))
+
+pear_five_scaled_df_train_x
+pear_five_scaled_df_test_x
+pear_five_scaled_df_train_y
+pear_five_scaled_df_test_y
+
+# Setup scalers X dataset
+scaler = StandardScaler()
+scaler.fit(pear_ten_df)
+pear_ten_df_scaled = scaler.transform(pear_ten_df)
+
+# pear_ten split dataset into 33% test 66% training
+(pear_ten_scaled_df_train_x, pear_ten_scaled_df_test_x,
+ pear_ten_scaled_df_train_y, pear_ten_scaled_df_test_y) = (
+        train_test_split(pear_ten_df_scaled, lol_y, test_size = 0.33, 
+                         random_state=1337))
+
+pear_ten_scaled_df_train_x
+pear_ten_scaled_df_test_x
+pear_ten_scaled_df_train_y
+pear_ten_scaled_df_test_y
+
+# Setup scalers X dataset
+scaler = StandardScaler()
+scaler.fit(ols_df)
+ols_df_scaled = scaler.transform(ols_df)
+
+# ols_df split dataset into 33% test 66% training
+(ols_scaled_df_train_x, ols_scaled_df_test_x, ols_scaled_df_train_y,
+ ols_scaled_df_test_y) = (
+        train_test_split(ols_df_scaled, lol_y, test_size = 0.33, 
+                         random_state=1337))
+
+ols_scaled_df_train_x
+ols_scaled_df_test_x
+ols_scaled_df_train_y
+ols_scaled_df_test_y
+
+# Setup scalers X dataset
+scaler = StandardScaler()
+scaler.fit(rfe_df)
+rfe_df_scaled = scaler.transform(rfe_df)
+
+# ols_df split dataset into 33% test 66% training
+(rfe_scaled_df_train_x, rfe_scaled_df_test_x, 
+ rfe_scaled_df_train_y, rfe_scaled_df_test_y) = (
+        train_test_split(rfe_df_scaled, lol_y, test_size = 0.33, 
+                         random_state=1337))
+rfe_scaled_df_train_x
+rfe_scaled_df_test_x
+rfe_scaled_df_train_y
+rfe_scaled_df_test_y
+
+# Setup scalers X dataset
+scaler = StandardScaler()
+scaler.fit(lasso_df)
+lasso_df_scaled = scaler.transform(lasso_df)
+
+# lasso split dataset into 33% test 66% training
+(lasso_scaled_df_train_x, lasso_scaled_df_test_x, lasso_scaled_df_train_y, 
+lasso_scaled_df_test_y) = (train_test_split(lasso_df_scaled, lol_y, 
+                                             test_size = 0.33, 
+                                             random_state=1337))
+lasso_scaled_df_train_x
+lasso_scaled_df_test_x
+lasso_scaled_df_train_y
+lasso_scaled_df_test_y
+
+####
+# End scaled dataframes
+####
