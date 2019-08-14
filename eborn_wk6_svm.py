@@ -84,25 +84,25 @@ x_train_2017 = scaler.transform(x_train_2017)
 scaler.fit(x_test_2018)
 x_test_2018 = scaler.transform(x_test_2018)
 
-# create SVM classifier
-svm_classifier = svm.SVC(kernel = 'linear')
+# create a linear SVM classifier
+svm_classifier_linear = svm.SVC(kernel = 'linear')
 
 # fit the classifier on training data
-svm_classifier.fit(x_train_2017, y_train_2017)
+svm_classifier_linear.fit(x_train_2017, y_train_2017)
 
 # Predict using 2018 feature data
-prediction = svm_classifier.predict(x_test_2018)
+prediction_linear = svm_classifier_linear.predict(x_test_2018)
 
 # calculate error rate
-accuracy_rate = 100-(round(np.mean(prediction != y_test_2018) * 100, 2))
+accuracy_rate_linear = 100-(round(np.mean(prediction_linear != y_test_2018) * 100, 2))
 
 # 1)
-# Print error rate
-print('The linear SVM classifier has an accuracy of', accuracy_rate,'%')
+# Print accuracy rate
+print('The linear SVM classifier has an accuracy of', accuracy_rate_linear,'%')
 
 # 2)
 # Output the confusion matrix
-cm = confusion_matrix(y_test_2018, prediction)
+cm = confusion_matrix(y_test_2018, prediction_linear)
 print('\nConfusion matrix for year 2 predictions:')
 print(cm, '\n')
 
@@ -124,15 +124,50 @@ plt.xlabel('Predicted label')
 
 # 3)
 # store confusion matrix figures
-tn, fp, fn, tp = confusion_matrix(y_test_2018, prediction).ravel()
+tn, fp, fn, tp = confusion_matrix(y_test_2018, prediction_linear).ravel()
 
 # TPR/TNR rates
 print('The TPR is:', str(tp) + '/' + str(tp + fn) + ',',
-      round(recall_score(y_test_2018, prediction) * 100, 2),'%')
+      round(recall_score(y_test_2018, prediction_linear) * 100, 2),'%')
 print('The TNR is:', str(tn) + '/' + str(tn + fp) + ',',
     round(tn / (tn + fp) * 100, 2),'%')
 
+
 # 4)
+# create a gaussian SVM classifier
+svm_classifier_rbf = svm.SVC(kernel = 'rbf')
+
+# fit the classifier on training data
+svm_classifier_rbf.fit(x_train_2017, y_train_2017)
+
+# Predict using 2018 feature data
+prediction_rbf = svm_classifier_rbf.predict(x_test_2018)
+
+# calculate error rate
+accuracy_rate_rbf = 100-(round(np.mean(prediction_rbf != y_test_2018) * 100, 2))
+
+# Print accuracy rate
+print('The gaussian SVM classifier has an accuracy of', accuracy_rate_rbf,'%')
+
+
+# 5)
+# create a polynomial SVM classifier
+svm_classifier_poly = svm.SVC(kernel = 'poly')
+
+# fit the classifier on training data
+svm_classifier_poly.fit(x_train_2017, y_train_2017)
+
+# Predict using 2018 feature data
+prediction_poly = svm_classifier_poly.predict(x_test_2018)
+
+# calculate error rate
+accuracy_rate_poly = 100-(round(np.mean(prediction_poly != y_test_2018) * 100, 2))
+
+# Print accuracy rate
+print('The polynomial SVM classifier has an accuracy of', accuracy_rate_poly,'%')
+
+
+# 6)
 # Implemented trading strategy based upon label predicitons vs
 # buy and hold strategy
 
@@ -150,17 +185,17 @@ open_price = bsx_df_2018.groupby('td_week_number')['open'].first()
 # for loop that evaluates the dataset deciding when to buy/sell based
 # upon the prediction labels. 0 is a bad week, 1 is a good week
 try:
-    for day in range(0, len(prediction)):
+    for day in range(0, len(prediction_linear)):
         # Sell should occur on the last day of a green week at 
         # the adjusted_close price. Since i is tracking the current
         # trading week we need to minus 1 to get the adjusted close price
         # from the previous trading week
-        if prediction[day] == 0 and shares > 0:
+        if prediction_linear[day] == 0 and shares > 0:
             wallet = round(shares * adj_close[day - 1], 2)
             shares = 0
             
         # Buy should occur on the first day of a green week at the open price
-        if prediction[day] == 1 and shares == 0: 
+        if prediction_linear[day] == 1 and shares == 0: 
             shares = wallet / open_price[day]
             wallet = 0            
             
@@ -181,7 +216,7 @@ else:
 # Total Cash: $0
 # Total shares: 6.703067 
 # Worth: $236.89
-# This method would close the year at $ 141.7 a profit of $ 41.7
+# This method would close the year at $ 236.89 a profit of $ 136.89
 print('\n2018 Label Strategy:')
 print('Total Cash: $', wallet, '\nTotal shares:', round(shares, 6),
       '\nWorth: $', worth)    
