@@ -94,6 +94,16 @@ plt.scatter(x_values[y_means == 1, 0], x_values[y_means == 1, 1],
 plt.scatter(centroids[:, 0], centroids[:,1] ,
                 s = 200 , c = 'black', label = 'Centroids')
 
+total_green = sum(y_means == 1)
+total_red =   sum(y_means == 0)
+
+# print total and percent of each color
+print('Total red points:', total_red, '\npercentage of red:', 
+      round(total_red/len(y_means), 2)*100,
+      '\nTotal green points:', total_green, '\npercentage of green', 
+      round(total_green/len(y_means), 2)*100)
+
+
 
 # 1)
 # Print accuracy rate
