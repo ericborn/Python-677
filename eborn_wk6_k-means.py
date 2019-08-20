@@ -11,11 +11,8 @@ deviation measures of the weekly stock returns
 import os
 from sys import exit
 import matplotlib.pyplot as plt
-#import numpy as np
 import pandas as pd
-#import seaborn as sns
 from sklearn.cluster import KMeans
-#from sklearn.metrics import confusion_matrix, recall_score
 from sklearn.preprocessing import StandardScaler
 
 # setup input directory and filename
@@ -71,11 +68,16 @@ centroids = kmeans_classifier.cluster_centers_
 inertia_list = []
 
 # for loop that iterates k 1 through 8
-for k in range(1, 9):
-    kmeans_classifier = KMeans(n_clusters = k)
-    y_means = kmeans_classifier.fit_predict(x_values_scaled)
-    inertia = kmeans_classifier.inertia_
-    inertia_list.append(inertia)
+try:
+    for k in range(1, 9):
+        kmeans_classifier = KMeans(n_clusters = k)
+        y_means = kmeans_classifier.fit_predict(x_values_scaled)
+        inertia = kmeans_classifier.inertia_
+        inertia_list.append(inertia)
+
+except Exception as e:
+    print(e)
+    exit('failed to create the k-means classifier')
 
 # Generate a plot based upon the iterations of k
 fig,ax = plt.subplots(1,figsize =(7,5))

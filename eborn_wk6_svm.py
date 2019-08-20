@@ -94,7 +94,8 @@ svm_classifier_linear.fit(x_train_2017, y_train_2017)
 prediction_linear = svm_classifier_linear.predict(x_test_2018)
 
 # calculate error rate
-accuracy_rate_linear = 100-(round(np.mean(prediction_linear != y_test_2018) * 100, 2))
+accuracy_rate_linear = 100-(round(np.mean(prediction_linear != y_test_2018) * 
+                                  100, 2))
 
 # 1)
 # Print accuracy rate
@@ -144,7 +145,8 @@ svm_classifier_rbf.fit(x_train_2017, y_train_2017)
 prediction_rbf = svm_classifier_rbf.predict(x_test_2018)
 
 # calculate error rate
-accuracy_rate_rbf = 100-(round(np.mean(prediction_rbf != y_test_2018) * 100, 2))
+accuracy_rate_rbf = 100-(round(np.mean(prediction_rbf != y_test_2018) * 100, 
+                               2))
 
 # Print accuracy rate
 print('The gaussian SVM classifier has an accuracy of', accuracy_rate_rbf,'%')
@@ -161,10 +163,12 @@ svm_classifier_poly.fit(x_train_2017, y_train_2017)
 prediction_poly = svm_classifier_poly.predict(x_test_2018)
 
 # calculate error rate
-accuracy_rate_poly = 100-(round(np.mean(prediction_poly != y_test_2018) * 100, 2))
+accuracy_rate_poly = 100-(round(np.mean(prediction_poly != y_test_2018) 
+                         * 100, 2))
 
 # Print accuracy rate
-print('The polynomial SVM classifier has an accuracy of', accuracy_rate_poly,'%')
+print('The polynomial SVM classifier has an accuracy of', 
+      accuracy_rate_poly,'%')
 
 
 # 6)
@@ -239,4 +243,5 @@ profit = round(worth - 100.00, 2)
 #Selling on the final day would result in $ 141.7 a profit of $ 41.7
 print('\n2018 buy and hold:','\nCurrently own', shares, 'shares',
       '\nWorth','$',"%.2f"%round(worth, 2))
-print('Selling on the final day would result in $',"%.2f"%worth, 'a profit of $', "%.2f"%profit)
+print('Selling on the final day would result in $',"%.2f"%worth, 
+      'a profit of $', "%.2f"%profit)
