@@ -23,13 +23,12 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LassoCV, LogisticRegression, LinearRegression
-from sklearn.metrics import confusion_matrix, recall_score,\
-                            classification_report
+from sklearn.metrics import confusion_matrix, recall_score
 
 # Set display options for dataframes
 #pd.set_option('display.max_rows', 100)
 #pd.set_option('display.width', 500)
-pd.set_option('display.max_columns', 50)
+#pd.set_option('display.max_columns', 50)
 
 # set seaborn to dark backgrounds
 sns.set_style("darkgrid")
@@ -45,13 +44,13 @@ timings_list.append(['Data clean up duration:', time.time()])
 
 # setup input directory and filename
 data = 'LoL'
-input_dir = r'C:\Code projects\BU\677 - Data Science with py\Final'
+input_dir = r'C:\Users\TomBrody\Desktop\School\677\Final'
 csv_file = os.path.join(input_dir, data + '.csv')
 
 # read csv file into dataframe
 try:
     lol_df = pd.read_csv(csv_file)
-    print('opened file for LoL data: ', data, '\n')
+    print('opened file for ticker: ', data, '\n')
 
 except Exception as e:
     print(e)
@@ -121,7 +120,7 @@ cor = lol_df.corr()
 cor_target = abs(cor['win'])
 
 # selecting features correlated greater than 0.5
-relevant_features_five = cor_target[cor_target > 0.5]
+relevant_features_five = cor_target[cor_target>0.5]
 
 # second set of features correlated greater than 0.35
 relevant_features_ten = cor_target[cor_target > 0.35]
@@ -141,26 +140,8 @@ pear_ten_df = lol_df[['firstTower','firstInhibitor', 't1_towerKills',
 print('Pearsons top 5 attributes:')
 print(list(pear_five_df.columns), '\n')
 
-# Create correlation matrix for > 0.5 correlation
-fig = plt.figure(figsize=(5,5))
-sns.heatmap(lol_df[['firstInhibitor', 't1_towerKills', 't1_inhibitorKills', 
-                      't2_towerKills', 't2_inhibitorKills','win']].corr(), 
-            annot=True, vmin=-1, vmax=1, center=0, cmap="coolwarm", fmt='.2f',
-            linewidths=2, linecolor='black')
-plt.title('Correlation matrix for > 0.5 correlation', y=1.1)
-
 print('Pearsons top 10 attributes:')
 print(list(pear_ten_df.columns), '\n')
-
-# Create correlation matrix for > 0.35 correlation
-fig = plt.figure(figsize=(10,10))
-sns.heatmap(lol_df[['firstTower','firstInhibitor', 't1_towerKills',
-                    't1_inhibitorKills', 't1_baronKills', 't1_dragonKills',
-                    't2_towerKills', 't2_inhibitorKills', 't2_baronKills',
-                    't2_dragonKills','win']].corr(), annot=True, vmin=-1,
-            vmax=1, center=0, cmap="coolwarm", fmt='.2f', linewidths=2, 
-            linecolor='black')
-plt.title('Correlation matrix for > 0.35 correlation' , y=1.1)
 
 #######
 # End Pearsons corerelation
@@ -210,7 +191,7 @@ ols_df = lol_df[selected_features_BE]
 # Start Recursive Feature Elimination
 ######
 
-#####
+#####!!!!!!!!!
 # only used to determine optimum number of attributes
 #####
 
@@ -239,7 +220,7 @@ ols_df = lol_df[selected_features_BE]
 #print("Optimum number of features: %d" %nof)
 #print("Score with %d features: %f" % (nof, high_score))
 
-#####
+#####!!!!!!!!!
 # only used to determine optimum number of attributes
 #####
 
@@ -298,43 +279,8 @@ print("Total Features: " + str(sum(coef != 0)),
 # end timing
 timings_list.append(['features time end', time.time()])
 
-# output min, max and mean values for the lasso features
-lasso_df.min()
-lasso_df.max()
-lasso_df.mean()
-
 ################
 # End attribute selection with various methods
-################
-
-################
-# Start five number summary setup 
-################
-
-# create an empty list for the columns from each feature selection
-full_feature_list = []
-
-# append the columns from each feature selection
-full_feature_list.append(list(pear_five_df.columns))
-full_feature_list.append(list(pear_ten_df.columns))
-full_feature_list.append(list(ols_df.columns))
-full_feature_list.append(list(rfe_df.columns))
-full_feature_list.append(list(lasso_df.columns))
-
-# flatten the list of lists into a single list
-flat_list = []
-for sublist in full_feature_list:
-    for item in sublist:
-        flat_list.append(item)
-
-# convert the list to a set to keep only unique values
-full_feature_set = set(flat_list)
-
-# use describe to view the 5 number summary for each of the columns
-lol_df[flat_list].describe()
-
-################
-# End five number summary setup 
 ################
 
 ################
@@ -810,10 +756,6 @@ timings_list.append(['naive time end', time.time()])
 # for each random forest classifier
 trees_depth = []
 
-# create an empty list to store the rf accuracy at various settings
-rf_accuracy = []
-
-# setup an empty dataframe for the rf tests
 rf_accuracy_df = pd.DataFrame()
 
 ####
@@ -825,12 +767,12 @@ pred_list = []
 # RF with iterator
 for trees in range(1, 26):
     for depth in range(1, 11):
-        rf_clf_test = RandomForestClassifier(n_estimators = trees, 
+        rf_clf = RandomForestClassifier(n_estimators = trees, 
                                     max_depth = depth, criterion ='entropy',
                                     random_state = 1337)
-        rf_clf_test.fit(pear_five_df_train_x, pear_five_df_train_y)
+        rf_clf.fit(pear_five_df_train_x, pear_five_df_train_y)
         pred_list.append([trees, depth, 
-                    round(np.mean(rf_clf_test.predict(pear_five_df_test_x) 
+                    round(np.mean(rf_clf.predict(pear_five_df_test_x) 
                     == pear_five_df_test_y) 
                     * 100, 2), 'pear_five'])
          
@@ -850,7 +792,7 @@ trees_depth.append(int(ind.item(0)))
 trees_depth.append(int(ind.item(1)))
 
 # append the models accruacy to the accuracy list
-rf_accuracy.append(round(ind.item(2), 2))
+global_accuracy.append(round(ind.item(2), 2))
 
 print('Pearsons Five:\nOptimal trees:', trees_depth[0],
       '\nOptimal depth:', trees_depth[1])
@@ -867,12 +809,12 @@ pred_list = []
 
 for trees in range(1, 26):
     for depth in range(1, 11):
-        rf_clf_test = RandomForestClassifier(n_estimators = trees, 
+        rf_clf = RandomForestClassifier(n_estimators = trees, 
                                     max_depth = depth, criterion ='entropy',
                                     random_state = 1337)
-        rf_clf_test.fit(pear_ten_df_train_x, pear_ten_df_train_y)
+        rf_clf.fit(pear_ten_df_train_x, pear_ten_df_train_y)
         pred_list.append([trees, depth, 
-                    round(np.mean(rf_clf_test.predict(pear_ten_df_test_x) 
+                    round(np.mean(rf_clf.predict(pear_ten_df_test_x) 
                     == pear_ten_df_test_y) 
                     * 100, 2), 'pear_ten'])
 
@@ -892,7 +834,7 @@ trees_depth.append(int(ind.item(0)))
 trees_depth.append(int(ind.item(1)))
 
 # append the models accruacy to the accuracy list
-rf_accuracy.append(round(ind.item(2), 2))
+global_accuracy.append(round(ind.item(2), 2))
 
 print('Pearsons Ten:\nOptimal trees:', trees_depth[2],
       '\nOptimal depth:', trees_depth[3])
@@ -909,12 +851,12 @@ pred_list = []
 
 for trees in range(1, 26):
     for depth in range(1, 11):
-        rf_clf_test = RandomForestClassifier(n_estimators = trees, 
+        rf_clf = RandomForestClassifier(n_estimators = trees, 
                                     max_depth = depth, criterion ='entropy',
                                     random_state = 1337)
-        rf_clf_test.fit(ols_df_train_x, ols_df_train_y)
+        rf_clf.fit(ols_df_train_x, ols_df_train_y)
         pred_list.append([trees, depth, 
-                    round(np.mean(rf_clf_test.predict(ols_df_test_x) 
+                    round(np.mean(rf_clf.predict(ols_df_test_x) 
                     == ols_df_test_y) 
                     * 100, 2), 'ols'])
 
@@ -934,7 +876,7 @@ trees_depth.append(int(ind.item(0)))
 trees_depth.append(int(ind.item(1)))
 
 # append the models accruacy to the accuracy list
-rf_accuracy.append(round(ind.item(2), 2))
+global_accuracy.append(round(ind.item(2), 2))
 
 print('OLS:\nOptimal trees:', trees_depth[4],
       '\nOptimal depth:', trees_depth[5])
@@ -952,12 +894,12 @@ pred_list = []
 
 for trees in range(1, 26):
     for depth in range(1, 11):
-        rf_clf_test = RandomForestClassifier(n_estimators = trees, 
+        rf_clf = RandomForestClassifier(n_estimators = trees, 
                                     max_depth = depth, criterion ='entropy',
                                     random_state = 1337)
-        rf_clf_test.fit(rfe_df_train_x, rfe_df_train_y)
+        rf_clf.fit(rfe_df_train_x, rfe_df_train_y)
         pred_list.append([trees, depth, 
-                    round(np.mean(rf_clf_test.predict(rfe_df_test_x) 
+                    round(np.mean(rf_clf.predict(rfe_df_test_x) 
                     == rfe_df_test_y) 
                     * 100, 2), 'rfe'])
 
@@ -977,7 +919,7 @@ trees_depth.append(int(ind.item(0)))
 trees_depth.append(int(ind.item(1)))
 
 # append the models accruacy to the accuracy list
-rf_accuracy.append(round(ind.item(2), 2))
+global_accuracy.append(round(ind.item(2), 2))
 
 print('RFE:\nOptimal trees:', trees_depth[6],
       '\nOptimal depth:', trees_depth[7])
@@ -994,12 +936,12 @@ pred_list = []
 
 for trees in range(1, 26):
     for depth in range(1, 11):
-        rf_clf_test = RandomForestClassifier(n_estimators = trees, 
+        rf_clf = RandomForestClassifier(n_estimators = trees, 
                                     max_depth = depth, criterion ='entropy',
                                     random_state = 1337)
-        rf_clf_test.fit(lasso_df_train_x, lasso_df_train_y)
+        rf_clf.fit(lasso_df_train_x, lasso_df_train_y)
         pred_list.append([trees, depth, 
-                    round(np.mean(rf_clf_test.predict(lasso_df_test_x) 
+                    round(np.mean(rf_clf.predict(lasso_df_test_x) 
                     == lasso_df_test_y) 
                     * 100, 2), 'lasso'])
 
@@ -1019,7 +961,7 @@ trees_depth.append(int(ind.item(0)))
 trees_depth.append(int(ind.item(1)))
 
 # append the models accruacy to the accuracy list
-rf_accuracy.append(round(ind.item(2), 2))
+global_accuracy.append(round(ind.item(2), 2))
 
 print('Lasso:\nOptimal trees:', trees_depth[8],
       '\nOptimal depth:', trees_depth[9])
@@ -1036,12 +978,12 @@ pred_list = []
 
 for trees in range(1, 26):
     for depth in range(1, 11):
-        rf_clf_test = RandomForestClassifier(n_estimators = trees, 
+        rf_clf = RandomForestClassifier(n_estimators = trees, 
                                     max_depth = depth, criterion ='entropy',
                                     random_state = 1337)
-        rf_clf_test.fit(full_df_train_x, full_df_train_y)
+        rf_clf.fit(full_df_train_x, full_df_train_y)
         pred_list.append([trees, depth, 
-                    round(np.mean(rf_clf_test.predict(full_df_test_x) 
+                    round(np.mean(rf_clf.predict(full_df_test_x) 
                     == full_df_test_y) 
                     * 100, 2), 'full'])
 
@@ -1061,7 +1003,7 @@ trees_depth.append(int(ind.item(0)))
 trees_depth.append(int(ind.item(1)))
 
 # append the models accruacy to the accuracy list
-rf_accuracy.append(round(ind.item(2), 2))
+global_accuracy.append(round(ind.item(2), 2))
 
 print('Full:\nOptimal trees:', trees_depth[10],
       '\nOptimal depth:', trees_depth[11])
@@ -1114,7 +1056,7 @@ rf_clf = RandomForestClassifier(n_estimators = 12,
                                     random_state = 1337)
 rf_clf.fit(pear_five_df_train_x, pear_five_df_train_y)
 
-rf_pear_five_pred = rf_clf.predict(pear_five_df_test_x)
+pear_five_pred = rf_clf.predict(pear_five_df_test_x)
 
 # store accuracy
 global_accuracy.append(100-(round(np.mean(rf_clf.predict(pear_five_df_test_x) 
@@ -2603,9 +2545,8 @@ print('The least accurate classifier was', least_accurate[0][0], 'using',
       'attribute set with an accuracy of', least_accurate[0][3],'%')
 
 # confusion matrix for random forest 8/8
-cm_one = confusion_matrix(pear_five_df_test_y, rf_pear_five_pred)
-tn, fp, fn, tp  = confusion_matrix(pear_five_df_test_y, \
-                                   rf_pear_five_pred).ravel()
+cm_one = confusion_matrix(pear_five_df_test_y, pear_five_pred)
+tn, fp, fn, tp  = confusion_matrix(pear_five_df_test_y, pear_five_pred).ravel()
 
 # Create confusion matrix heatmap
 # setup class names and tick marks
@@ -2616,20 +2557,16 @@ plt.xticks(tick_marks, class_names)
 plt.yticks(tick_marks, class_names)
 
 # Create heatmap and labels
-sns.heatmap(pd.DataFrame(cm_one), annot=True, cmap="summer", fmt='g')
+sns.heatmap(pd.DataFrame(cm_one), annot=True, cmap="summer" ,fmt='g')
 ax.xaxis.set_label_position("top")
-ax.set_ylim([0,2])
 plt.tight_layout()
 plt.title('Confusion matrix for Random Forest', y=1.1)
 plt.ylabel('Actual label')
 plt.xlabel('Predicted label')
 
-# print precision and recall values
-print(classification_report(pear_five_df_test_y, rf_pear_five_pred))
-
 # TPR/TNR rates
 print('The TPR is:', str(tp) + '/' + str(tp + fn) + ',',
-      round(recall_score(pear_five_df_test_y, rf_pear_five_pred) * 100, 2),'%')
+      round(recall_score(pear_five_df_test_y, pear_five_pred) * 100, 2),'%')
 print('The TNR is:', str(tn) + '/' + str(tn + fp) + ',',
     round(tn / (tn + fp) * 100, 2),'%')
 
